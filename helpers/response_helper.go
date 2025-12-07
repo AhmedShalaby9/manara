@@ -62,3 +62,7 @@ func RespondSuccess(c *gin.Context, data interface{}, message string) {
 func RespondCreated(c *gin.Context, data interface{}, message string) {
 	RespondWithStatus(c, http.StatusCreated, true, data, message)
 }
+
+func RespondForbiden(c *gin.Context, message string) {
+	RespondError(c, http.StatusForbidden, message)
+}

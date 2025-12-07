@@ -13,5 +13,7 @@ func AuthRoutes(router *gin.Engine) {
 		auth.POST("/register", controllers.Register)
 		auth.POST("/login", controllers.Login)
 		auth.GET("/me", middleware.AuthMiddleware(), controllers.GetMe)
+		auth.POST("/logout", middleware.AuthMiddleware(), controllers.Logout)
+
 	}
 }

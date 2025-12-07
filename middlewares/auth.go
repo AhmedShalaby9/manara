@@ -74,7 +74,7 @@ func RoleMiddleware(allowedRoleValues ...string) gin.HandlerFunc {
 		}
 
 		if !allowed {
-			helpers.Respond(c, false, nil, "Insufficient permissions")
+			helpers.RespondForbiden(c, "Insufficient permissions")
 			c.Abort()
 			return
 		}

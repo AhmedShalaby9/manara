@@ -140,3 +140,7 @@ func GetMe(c *gin.Context) {
 
 	helpers.Respond(c, true, user, "User retrieved successfully")
 }
+
+func Logout(c *gin.Context) {
+	helpers.Respond(c, true, nil, "Logged out successfully")
+}
