@@ -4,19 +4,17 @@ import (
 	"fmt"
 	"log"
 	"manara/database"
-	"net/http"
+	"manara/routes"
 	"os"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/rs/cors"
 )
 
 func main() {
-	// Load environment variables
 	env := os.Getenv("GO_ENV")
 	if env == "" {
-		env = "local" // Default to local environment
+		env = "local"
 	}
 
 	envFile := fmt.Sprintf(".env.%s", env)
@@ -27,45 +25,40 @@ func main() {
 
 	log.Printf("🚀 Starting Manara Backend in %s mode...", env)
 
-	// Connect to database
 	err = database.Connect()
 	if err != nil {
 		log.Fatalf("❌ Database connection failed: %v", err)
 	}
 	defer database.Close()
 
-	// Initialize router
-	router := mux.NewRouter()
+	if os.Getenv("APP_DEBUG") == "false" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
-	// Test route
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"message": "Welcome to Manara API", "status": "running"}`))
-	}).Methods("GET")
+	router := gin.Default()
 
-	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "healthy", "database": "connected"}`))
-	}).Methods("GET")
+	router.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
-	// CORS configuration
-	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   []string{os.Getenv("CORS_ALLOWED_ORIGINS")},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Content-Type", "Authorization"},
-		AllowCredentials: true,
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
 	})
 
-	// Get port from environment
+	routes.AuthRoutes(router)
+	routes.RoleRoutes(router)
+
 	port := os.Getenv("APP_PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	// Start server
 	log.Printf("✅ Server is running on port %s", port)
 	log.Printf("🌍 Environment: %s", env)
-	log.Fatal(http.ListenAndServe(":"+port, corsHandler.Handler(router)))
+	router.Run(":" + port)
 }

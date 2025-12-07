@@ -1,0 +1,21 @@
+package models
+
+type LoginRequest struct {
+	UserName string `json:"user_name" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type RegisterRequest struct {
+	FirstName string `json:"first_name" binding:"required"`
+	LastName  string `json:"last_name" binding:"required"`
+	Email     string `json:"email" binding:"required,email"`
+	Phone     string `json:"phone"`
+	UserName  string `json:"user_name" binding:"required"`
+	Password  string `json:"password" binding:"required,min=6"`
+	RoleID    uint   `json:"role_id" binding:"required"`
+}
+
+type AuthResponse struct {
+	Token string `json:"token"`
+	User  User   `json:"user"`
+}
