@@ -1,0 +1,5 @@
+GO_ENV=local go run main.go
+
+cd /Users/ahmedgamal/golang-projects/manara
+go build -o manara-backend main.go
+./manara-backend

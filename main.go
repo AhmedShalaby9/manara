@@ -52,6 +52,8 @@ func main() {
 
 	routes.AuthRoutes(router)
 	routes.RoleRoutes(router)
+	routes.TeacherRoutes(router)
+	routes.StudentRoutes(router)
 
 	port := os.Getenv("APP_PORT")
 	if port == "" {

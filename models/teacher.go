@@ -20,3 +20,21 @@ type Teacher struct {
 func (Teacher) TableName() string {
 	return "teachers"
 }
+
+type CreateTeacherRequest struct {
+	FirstName       string `json:"first_name" binding:"required"`
+	LastName        string `json:"last_name" binding:"required"`
+	Email           string `json:"email" binding:"required,email"`
+	Phone           string `json:"phone"`
+	UserName        string `json:"user_name" binding:"required"`
+	Password        string `json:"password" binding:"required,min=6"`
+	Bio             string `json:"bio"`
+	Specialization  string `json:"specialization"`
+	ExperienceYears int    `json:"experience_years"`
+}
+
+type UpdateTeacherRequest struct {
+	Bio             string `json:"bio"`
+	Specialization  string `json:"specialization"`
+	ExperienceYears int    `json:"experience_years"`
+}
