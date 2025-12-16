@@ -8,12 +8,14 @@ import (
 )
 
 func AuthRoutes(router *gin.Engine) {
+
 	auth := router.Group("/auth")
 	{
 		auth.POST("/register", controllers.Register)
 		auth.POST("/login", controllers.Login)
 		auth.GET("/me", middleware.AuthMiddleware(), controllers.GetMe)
 		auth.POST("/logout", middleware.AuthMiddleware(), controllers.Logout)
+		auth.GET("/generate-username", controllers.GenerateUniqueUserName)
 
 	}
 }

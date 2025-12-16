@@ -54,6 +54,12 @@ func CreateStudent(c *gin.Context) {
 		return
 	}
 
+	var academicYear models.AcademicYear
+	if err := database.DB.First(&academicYear, req.AcademicYearID).Error; err != nil {
+		helpers.Respond(c, false, nil, "Academic year not found")
+		return
+	}
+
 	var existingUser models.User
 	if err := database.DB.Where("user_name = ?", req.UserName).First(&existingUser).Error; err == nil {
 		helpers.Respond(c, false, nil, "Username already exists")
@@ -91,8 +97,10 @@ func CreateStudent(c *gin.Context) {
 	}
 
 	student := models.Student{
-		UserID:    user.ID,
-		TeacherID: req.TeacherId, GradeLevel: req.GradeLevel, ParentPhone: req.ParentPhone,
+		UserID:         user.ID,
+		TeacherID:      req.TeacherID,
+		AcademicYearID: req.AcademicYearID, // ← Use directly (no default)
+		ParentPhone:    req.ParentPhone,
 	}
 
 	if err := tx.Create(&student).Error; err != nil {
@@ -103,72 +111,7 @@ func CreateStudent(c *gin.Context) {
 
 	tx.Commit()
 
-	database.DB.Preload("User.Role").First(&student, student.ID)
+	database.DB.Preload("User.Role").Preload("AcademicYear").First(&student, student.ID)
 
 	helpers.Respond(c, true, student, "Student created successfully")
 }
-
-// UpdateTeacher - Update teacher info
-// func UpdateStudent(c *gin.Context) {
-// 	id, _ := strconv.Atoi(c.Param("id"))
-// 	var teacher models.Teacher
-
-// 	// Check if teacher exists
-// 	if err := database.DB.First(&teacher, id).Error; err != nil {
-// 		helpers.Respond(c, false, nil, "Teacher not found")
-// 		return
-// 	}
-
-// 	var req models.UpdateTeacherRequest
-// 	if err := c.ShouldBindJSON(&req); err != nil {
-// 		helpers.Respond(c, false, nil, err.Error())
-// 		return
-// 	}
-
-// 	// Update teacher info
-// 	teacher.Bio = req.Bio
-// 	teacher.Specialization = req.Specialization
-// 	teacher.ExperienceYears = req.ExperienceYears
-
-// 	if err := database.DB.Save(&teacher).Error; err != nil {
-// 		helpers.Respond(c, false, nil, "Failed to update teacher")
-// 		return
-// 	}
-
-// 	// Load with user info
-// 	database.DB.Preload("User.Role").First(&teacher, teacher.ID)
-
-// 	helpers.Respond(c, true, teacher, "Teacher updated successfully")
-// }
-
-// DeleteTeacher - Delete a teacher (Admin/Super Admin only)
-// func DeleteStudent(c *gin.Context) {
-// 	id, _ := strconv.Atoi(c.Param("id"))
-
-// 	var teacher models.Teacher
-// 	if err := database.DB.First(&teacher, id).Error; err != nil {
-// 		helpers.Respond(c, false, nil, "Teacher not found")
-// 		return
-// 	}
-
-// 	// Start transaction
-// 	tx := database.DB.Begin()
-
-// 	// Delete teacher record
-// 	if err := tx.Delete(&teacher).Error; err != nil {
-// 		tx.Rollback()
-// 		helpers.Respond(c, false, nil, "Failed to delete teacher")
-// 		return
-// 	}
-
-// 	// Delete associated user
-// 	if err := tx.Delete(&models.User{}, teacher.UserID).Error; err != nil {
-// 		tx.Rollback()
-// 		helpers.Respond(c, false, nil, "Failed to delete user")
-// 		return
-// 	}
-
-// 	tx.Commit()
-
-// 	helpers.Respond(c, true, nil, "Teacher deleted successfully")
-// }

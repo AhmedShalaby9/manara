@@ -5,6 +5,8 @@ import (
 	"manara/helpers"
 	"manara/models"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -141,6 +143,33 @@ func GetMe(c *gin.Context) {
 	helpers.Respond(c, true, user, "User retrieved successfully")
 }
 
+func GenerateUniqueUserName(c *gin.Context) {
+	firstName := c.Query("first_name")
+	lastName := c.Query("last_name")
+
+	if lastName == "" || firstName == "" {
+		helpers.Respond(c, false, nil, "First name and last name are required")
+		return
+	}
+
+	baseUsername := strings.ToLower(firstName + lastName)
+	baseUsername = strings.ReplaceAll(baseUsername, " ", "")
+
+	var user models.User
+	username := baseUsername
+	counter := 1
+
+	for {
+		err := database.DB.Where("user_name = ?", username).First(&user).Error
+		if err != nil {
+			break
+		}
+		username = baseUsername + strconv.Itoa(counter)
+		counter++
+	}
+
+	helpers.Respond(c, true, gin.H{"username": username}, "Username generated successfully") // ← Fixed
+}
 func Logout(c *gin.Context) {
 	helpers.Respond(c, true, nil, "Logged out successfully")
 }
