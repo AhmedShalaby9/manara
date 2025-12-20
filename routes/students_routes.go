@@ -6,12 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func StudentRoutes(router *gin.Engine) {
+func StudentRoutes(router gin.IRouter) { // ← Changed
 	students := router.Group("/students")
 	{
 		students.GET("", controllers.GetStudents)
 		students.GET("/:id", controllers.GetStudent)
 		students.POST("", controllers.CreateStudent)
-
 	}
 }

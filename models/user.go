@@ -17,7 +17,7 @@ type User struct {
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 
-	Role    Role     `gorm:"foreignKey:RoleID;references:ID" json:"role,omitempty"`
+	Role    *Role    `gorm:"foreignKey:RoleID;references:ID" json:"role,omitempty"`
 	Teacher *Teacher `gorm:"foreignKey:UserID" json:"teacher,omitempty"`
 	Student *Student `gorm:"foreignKey:UserID" json:"student,omitempty"`
 }

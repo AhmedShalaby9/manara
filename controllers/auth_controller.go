@@ -49,7 +49,7 @@ func Register(c *gin.Context) {
 		UserName:     req.UserName,
 		PasswordHash: hashedPassword,
 		RoleID:       req.RoleID,
-		IsActive:     true,
+		IsActive:     false,
 	}
 
 	if err := database.DB.Create(&user).Error; err != nil {
@@ -172,4 +172,28 @@ func GenerateUniqueUserName(c *gin.Context) {
 }
 func Logout(c *gin.Context) {
 	helpers.Respond(c, true, nil, "Logged out successfully")
+}
+
+func ChangePassword(c *gin.Context) {
+	var user models.User
+	id, _ := strconv.Atoi(c.Param("id"))
+	var newPassword = c.PostForm("new_password")
+
+	if err := database.DB.First(&user, id).Error; err != nil {
+		helpers.RespondNotFound(c, "User not found")
+		return
+	}
+
+	hashedPassword, err := helpers.HashPassword(newPassword)
+	if err != nil {
+		helpers.RespondInternalError(c, false, "Failed to update user password")
+		return
+	}
+
+	if err := database.DB.Model(&user).Update("password_hash", hashedPassword).Error; err != nil {
+		helpers.RespondBadRequest(c, "Failed to update user password")
+		return
+	}
+	helpers.RespondCreated(c, user, "Passowrd Updated successfully")
+
 }

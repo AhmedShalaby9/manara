@@ -51,7 +51,7 @@ func RespondUnauthorized(c *gin.Context, message string) {
 	RespondError(c, http.StatusUnauthorized, message)
 }
 
-func RespondInternalError(c *gin.Context, message string) {
+func RespondInternalError(c *gin.Context, success bool, message string) {
 	RespondError(c, http.StatusInternalServerError, message)
 }
 
@@ -61,6 +61,10 @@ func RespondSuccess(c *gin.Context, data interface{}, message string) {
 
 func RespondCreated(c *gin.Context, data interface{}, message string) {
 	RespondWithStatus(c, http.StatusCreated, true, data, message)
+}
+
+func RespondUpdated(c *gin.Context, data interface{}, message string) {
+	RespondWithStatus(c, http.StatusAccepted, true, data, message)
 }
 
 func RespondForbiden(c *gin.Context, message string) {

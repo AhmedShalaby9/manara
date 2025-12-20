@@ -7,13 +7,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func TeacherRoutes(router *gin.Engine) {
+func TeacherRoutes(router gin.IRouter) { // ← Changed
 	teachers := router.Group("/teachers")
 	{
 		teachers.GET("", controllers.GetTeachers)
 		teachers.GET("/:id", controllers.GetTeacher)
 
-		var adminOnly = teachers.Group("")
+		adminOnly := teachers.Group("")
 		adminOnly.Use(middleware.AuthMiddleware())
 		adminOnly.Use(middleware.RoleMiddleware("admin", "super_admin"))
 		{

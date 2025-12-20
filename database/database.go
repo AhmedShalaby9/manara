@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"log"
+	"manara/models"
 	"os"
 
 	"gorm.io/driver/mysql"
@@ -38,7 +39,8 @@ func Connect() error {
 
 	var err error
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: gormLogger,
+		Logger:                                   gormLogger,
+		DisableForeignKeyConstraintWhenMigrating: true, // ← Add this
 	})
 	if err != nil {
 		return fmt.Errorf("error opening database: %v", err)
@@ -61,6 +63,30 @@ func Connect() error {
 	return nil
 }
 
+func AutoMigrate() error {
+	log.Println("🔄 Running database migrations...")
+
+	err := DB.AutoMigrate(
+		&models.Role{},
+		&models.User{},
+		&models.AcademicYear{},
+		&models.Teacher{},
+		&models.Student{},
+		&models.Course{},
+		&models.Chapter{},
+		&models.Lesson{},
+		&models.TeacherCourse{},
+	)
+
+	if err != nil {
+		log.Printf("❌ AutoMigrate error: %v", err)
+		return err
+	}
+
+	log.Println("✅ Migrations completed successfully")
+	return nil
+}
+
 func Close() error {
 	if DB != nil {
 		sqlDB, err := DB.DB()
@@ -75,3 +101,5 @@ func Close() error {
 func GetDB() *gorm.DB {
 	return DB
 }
+
+//GO_ENV=local go run main.go -migrate

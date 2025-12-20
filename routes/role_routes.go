@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RoleRoutes(router *gin.Engine) {
+func RoleRoutes(router gin.IRouter) { // ← Changed
 	roles := router.Group("/roles")
 	{
 		roles.GET("", controllers.GetRoles)

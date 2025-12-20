@@ -56,7 +56,7 @@ func CreateStudent(c *gin.Context) {
 
 	var academicYear models.AcademicYear
 	if err := database.DB.First(&academicYear, req.AcademicYearID).Error; err != nil {
-		helpers.Respond(c, false, nil, "Academic year not found")
+		helpers.Respond(c, false, nil, "Academic year is wrong!")
 		return
 	}
 
@@ -99,7 +99,7 @@ func CreateStudent(c *gin.Context) {
 	student := models.Student{
 		UserID:         user.ID,
 		TeacherID:      req.TeacherID,
-		AcademicYearID: req.AcademicYearID, // ← Use directly (no default)
+		AcademicYearID: req.AcademicYearID,
 		ParentPhone:    req.ParentPhone,
 	}
 
@@ -111,7 +111,7 @@ func CreateStudent(c *gin.Context) {
 
 	tx.Commit()
 
-	database.DB.Preload("User.Role").Preload("AcademicYear").First(&student, student.ID)
+	database.DB.Preload("User").Preload("AcademicYear").First(&student, student.ID)
 
 	helpers.Respond(c, true, student, "Student created successfully")
 }

@@ -13,8 +13,10 @@ type Teacher struct {
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 
-	User     User      `gorm:"foreignKey:UserID;references:ID" json:"user,omitempty"`
+	User     *User     `gorm:"foreignKey:UserID;references:ID" json:"user,omitempty"`
 	Students []Student `gorm:"foreignKey:TeacherID" json:"students,omitempty"`
+	Courses  []Course  `gorm:"many2many:teacher_courses" json:"courses,omitempty"` // ← Added
+	Lessons  []Lesson  `gorm:"foreignKey:TeacherID" json:"lessons,omitempty"`      // ← Added
 }
 
 func (Teacher) TableName() string {

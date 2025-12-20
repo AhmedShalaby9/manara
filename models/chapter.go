@@ -1,0 +1,35 @@
+package models
+
+import (
+	"time"
+)
+
+type Chapter struct {
+	ID          uint      `gorm:"primaryKey;autoIncrement" json:"id"`
+	CourseID    uint      `gorm:"not null" json:"course_id"`
+	Name        string    `gorm:"type:varchar(100);not null" json:"name"`
+	Order       int       `gorm:"not null;default:1" json:"order"`
+	Description string    `gorm:"type:text" json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+
+	Course  *Course  `gorm:"foreignKey:CourseID;references:ID" json:"course,omitempty"`
+	Lessons []Lesson `gorm:"foreignKey:ChapterID" json:"lessons,omitempty"`
+}
+
+func (Chapter) TableName() string {
+	return "chapters"
+}
+
+type CreateChapterRequest struct {
+	CourseID    uint   `json:"course_id" binding:"required"`
+	Name        string `json:"name" binding:"required"`
+	Order       int    `json:"order"`
+	Description string `json:"description"`
+}
+
+type UpdateChapterRequest struct {
+	Name        string `json:"name"`
+	Order       int    `json:"order"`
+	Description string `json:"description"`
+}
