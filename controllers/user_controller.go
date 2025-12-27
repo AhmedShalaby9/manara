@@ -60,7 +60,8 @@ func GetUsers(c *gin.Context) {
 	search := c.Query("search")
 	roleID, _ := strconv.Atoi(c.Query("role_id"))
 	params := helpers.GetPaginationParams(c)
-	query := database.DB.Model(&models.User{}).Preload("Role")
+	query := database.DB.Model(&models.User{}).Preload("Role").Order("id DESC")
+
 	if search != "" {
 		searchPattern := "%" + search + "%"
 		query = query.Where(
