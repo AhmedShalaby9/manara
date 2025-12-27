@@ -57,8 +57,21 @@ func CreateUser(c *gin.Context) {
 }
 
 func GetUsers(c *gin.Context) {
+	search := c.Query("search")
+	roleID, _ := strconv.Atoi(c.Query("role_id"))
 	params := helpers.GetPaginationParams(c)
 	query := database.DB.Model(&models.User{}).Preload("Role")
+	if search != "" {
+		searchPattern := "%" + search + "%"
+		query = query.Where(
+			"first_name LIKE ? OR last_name LIKE ? OR user_name LIKE ?",
+			searchPattern, searchPattern, searchPattern,
+		)
+	}
+
+	if roleID > 0 {
+		query = query.Where("role_id = ?", roleID)
+	}
 	var users []models.User
 	pagination, err := helpers.Paginate(query, params, &users)
 	if err != nil {
