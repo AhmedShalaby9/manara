@@ -3,13 +3,16 @@ package helpers
 import (
 	"net/http"
 
+	"manara/models"
+
 	"github.com/gin-gonic/gin"
 )
 
 type Response struct {
-	Success bool        `json:"success"`
-	Data    interface{} `json:"data,omitempty"`
-	Message string      `json:"message,omitempty"`
+	Success    bool               `json:"success"`
+	Data       interface{}        `json:"data,omitempty"`
+	Message    string             `json:"message,omitempty"`
+	Pagination *models.Pagination `json:"pagination,omitempty"`
 }
 
 func Respond(c *gin.Context, success bool, data interface{}, message string) {
@@ -21,6 +24,19 @@ func Respond(c *gin.Context, success bool, data interface{}, message string) {
 		Success: success,
 		Data:    data,
 		Message: message,
+	})
+}
+
+func RespondWithPagin(c *gin.Context, success bool, data interface{}, message string, pagination models.Pagination) {
+	status := http.StatusOK
+	if !success {
+		status = http.StatusBadRequest
+	}
+	c.JSON(status, Response{
+		Success:    success,
+		Data:       data,
+		Message:    message,
+		Pagination: &pagination,
 	})
 }
 

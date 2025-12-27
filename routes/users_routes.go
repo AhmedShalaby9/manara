@@ -2,6 +2,7 @@ package routes
 
 import (
 	"manara/controllers"
+	middleware "manara/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,9 +10,15 @@ import (
 func UserRoutes(router gin.IRouter) {
 	users := router.Group("/users")
 	{
-		users.GET("", controllers.GetUsers)
-		users.POST("", controllers.CreateUser)
-		users.PUT("/:id", controllers.ToggleUserActivation)
+
+		adminOnly := users.Group("")
+		adminOnly.Use(middleware.AuthMiddleware())
+		adminOnly.Use(middleware.RoleMiddleware("admin", "super_admin"))
+
+		adminOnly.GET("", controllers.GetUsers)
+		adminOnly.POST("", controllers.CreateUser)
+		adminOnly.PUT("/:id", controllers.ToggleUserActivation)
+		adminOnly.DELETE("/:id", controllers.DeleteUser)
 
 	}
 }
