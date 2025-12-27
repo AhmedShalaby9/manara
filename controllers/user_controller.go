@@ -112,5 +112,10 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
+	if err := database.DB.Delete(&user).Error; err != nil {
+		helpers.Respond(c, false, nil, "Failed to delete user")
+		return
+	}
+
 	helpers.RespondSuccess(c, nil, "User deleted successfully")
 }
