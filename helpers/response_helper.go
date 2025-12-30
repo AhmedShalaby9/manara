@@ -86,3 +86,6 @@ func RespondUpdated(c *gin.Context, data interface{}, message string) {
 func RespondForbiden(c *gin.Context, message string) {
 	RespondError(c, http.StatusForbidden, message)
 }
+func RespondTokenError(c *gin.Context, message string) {
+	RespondError(c, http.StatusUnauthorized, message)
+}
