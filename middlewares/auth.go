@@ -32,7 +32,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		// Validate token
 		claims, err := helpers.ValidateToken(tokenString)
 		if err != nil {
-			helpers.Respond(c, false, nil, "Invalid or expired token")
+			helpers.RespondTokenError(c, "Invalid or expired token")
 			c.Abort()
 			return
 		}
