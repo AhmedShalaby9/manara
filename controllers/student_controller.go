@@ -24,7 +24,7 @@ func GetStudents(c *gin.Context) {
 		query = query.Where("grade_level =?", gradeLevel)
 	}
 
-	res := query.Find(&students).Preload("User")
+	res := query.Preload("User").Find(&students)
 	if res.Error != nil {
 		helpers.Respond(c, false, nil, res.Error.Error())
 		return
