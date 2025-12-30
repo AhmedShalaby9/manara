@@ -10,20 +10,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetCourses - Get all courses
 func GetCourses(c *gin.Context) {
 	var courses []models.Course
+	params := helpers.GetPaginationParams(c)
 
-	res := database.DB.Preload("Chapters").Preload("Teachers.User").Find(&courses)
-	if res.Error != nil {
-		helpers.Respond(c, false, nil, res.Error.Error())
+	query := database.DB.Model(&models.Course{})
+	pagination, err := helpers.Paginate(query, params, &courses)
+
+	if err != nil {
+		helpers.Respond(c, false, nil, "Failed to fetch courses")
 		return
 	}
 
-	helpers.Respond(c, true, courses, "Courses retrieved successfully")
+	helpers.RespondWithPagin(c, true, courses, "Courses retrieved successfully", pagination)
 }
 
-// GetCourse - Get single course
 func GetCourse(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var course models.Course
@@ -37,9 +38,7 @@ func GetCourse(c *gin.Context) {
 	helpers.Respond(c, true, course, "Course retrieved successfully")
 }
 
-// CreateCourse - Create a new course (Admin only)
 func CreateCourse(c *gin.Context) {
-	// Get text fields from form-data
 	name := c.PostForm("name")
 	description := c.PostForm("description")
 
@@ -48,11 +47,9 @@ func CreateCourse(c *gin.Context) {
 		return
 	}
 
-	// Handle optional image upload
 	var imageURL string
 	file, err := c.FormFile("image")
 	if err == nil {
-		// Image provided (optional)
 		baseURL := os.Getenv("APP_URL")
 		if baseURL == "" {
 			baseURL = "http://localhost:" + os.Getenv("APP_PORT")
@@ -72,7 +69,6 @@ func CreateCourse(c *gin.Context) {
 	}
 
 	if err := database.DB.Create(&course).Error; err != nil {
-		// Delete uploaded image if course creation fails
 		if imageURL != "" {
 			helpers.DeleteImage(imageURL)
 		}
@@ -83,7 +79,6 @@ func CreateCourse(c *gin.Context) {
 	helpers.Respond(c, true, course, "Course created successfully")
 }
 
-// UpdateCourse - Update course
 func UpdateCourse(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var course models.Course
@@ -93,11 +88,9 @@ func UpdateCourse(c *gin.Context) {
 		return
 	}
 
-	// Get text fields from form-data
 	name := c.PostForm("name")
 	description := c.PostForm("description")
 
-	// Update text fields
 	if name != "" {
 		course.Name = name
 	}
@@ -105,10 +98,8 @@ func UpdateCourse(c *gin.Context) {
 		course.Description = description
 	}
 
-	// Handle optional image upload
 	file, err := c.FormFile("image")
 	if err == nil {
-		// New image provided
 		oldImageURL := course.ImageURL
 
 		baseURL := os.Getenv("APP_URL")
@@ -116,7 +107,6 @@ func UpdateCourse(c *gin.Context) {
 			baseURL = "http://localhost:" + os.Getenv("APP_PORT")
 		}
 
-		// Upload new image
 		newImageURL, err := helpers.UploadImage(file, "courses", baseURL)
 		if err != nil {
 			helpers.Respond(c, false, nil, err.Error())

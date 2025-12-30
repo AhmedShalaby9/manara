@@ -17,3 +17,13 @@ type Role struct {
 func (Role) TableName() string {
 	return "roles"
 }
+
+func IsAdmin(roleValue string) bool {
+	return roleValue == "Admin"
+}
+func IsSuperAdmin(roleValue string) bool {
+	return roleValue == "super_admin"
+}
+func IsTeacher(roleValue string) bool {
+	return roleValue == "super_admin"
+}

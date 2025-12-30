@@ -1,0 +1,74 @@
+name: Deploy Manara Backend
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Build for Linux
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o manara-backend main.go
+
+      - name: Deploy to Staging
+        if: github.ref == 'refs/heads/staging'
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22
+          source: "manara-backend"
+          target: "/var/www/manara-backend/"
+
+      - name: Restart Staging Service
+        if: github.ref == 'refs/heads/staging'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22
+          script: |
+            cp /var/www/manara-backend/manara-backend /var/www/manara-backend/staging/manara-backend.new
+            mv /var/www/manara-backend/staging/manara-backend.new /var/www/manara-backend/staging/manara-backend
+            systemctl restart manara-staging
+            echo "✅ Staging deployed successfully"
+
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/main'
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22
+          source: "manara-backend"
+          target: "/var/www/manara-backend/"
+
+      - name: Restart Production Service
+        if: github.ref == 'refs/heads/main'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22
+          script: |
+            cp /var/www/manara-backend/manara-backend /var/www/manara-backend/production/manara-backend.new
+            mv /var/www/manara-backend/production/manara-backend.new /var/www/manara-backend/production/manara-backend
+            systemctl restart manara-production
+            echo "✅ Production deployed successfully"

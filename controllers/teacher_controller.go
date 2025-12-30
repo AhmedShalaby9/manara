@@ -13,13 +13,17 @@ import (
 func GetTeachers(c *gin.Context) {
 	var teachers []models.Teacher
 
-	res := database.DB.Preload("User.Role").Find(&teachers)
-	if res.Error != nil {
-		helpers.Respond(c, false, nil, res.Error.Error())
+	params := helpers.GetPaginationParams(c)
+	query := database.DB.Model(&models.Teacher{}).Preload("User.Role")
+
+	pagination, res := helpers.Paginate(query, params, &teachers)
+	if res != nil {
+		helpers.Respond(c, false, nil, "Failed to retrieve teachers")
+
 		return
 	}
 
-	helpers.Respond(c, true, teachers, "Teachers retrieved successfully")
+	helpers.RespondWithPagin(c, true, teachers, "Teachers retrieved successfully", pagination)
 }
 
 func GetTeacher(c *gin.Context) {

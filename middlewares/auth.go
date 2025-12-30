@@ -32,7 +32,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		// Validate token
 		claims, err := helpers.ValidateToken(tokenString)
 		if err != nil {
-			helpers.Respond(c, false, nil, "Invalid or expired token")
+			helpers.RespondTokenError(c, "Invalid or expired token")
 			c.Abort()
 			return
 		}
@@ -41,6 +41,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Set("user_id", claims.UserID)
 		c.Set("user_name", claims.UserName)
 		c.Set("role_id", claims.RoleID)
+		c.Set("role_value", claims.RoleValue)
 
 		c.Next()
 	}

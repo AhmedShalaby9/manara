@@ -24,7 +24,7 @@ func GetStudents(c *gin.Context) {
 		query = query.Where("grade_level =?", gradeLevel)
 	}
 
-	res := query.Find(&students)
+	res := query.Preload("User").Find(&students)
 	if res.Error != nil {
 		helpers.Respond(c, false, nil, res.Error.Error())
 		return
@@ -37,7 +37,7 @@ func GetStudent(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var student models.Student
 
-	res := database.DB.Preload("User.Role").First(&student, id)
+	res := database.DB.Preload("User.Role.AcademicYear").First(&student, id)
 	if res.Error != nil {
 		helpers.Respond(c, false, nil, "Student not found")
 		return

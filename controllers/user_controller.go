@@ -57,13 +57,30 @@ func CreateUser(c *gin.Context) {
 }
 
 func GetUsers(c *gin.Context) {
+	search := c.Query("search")
+	roleID, _ := strconv.Atoi(c.Query("role_id"))
+	params := helpers.GetPaginationParams(c)
+	query := database.DB.Model(&models.User{}).Preload("Role").Order("id DESC")
+
+	if search != "" {
+		searchPattern := "%" + search + "%"
+		query = query.Where(
+			"first_name LIKE ? OR last_name LIKE ? OR user_name LIKE ?",
+			searchPattern, searchPattern, searchPattern,
+		)
+	}
+
+	if roleID > 0 {
+		query = query.Where("role_id = ?", roleID)
+	}
 	var users []models.User
-	if err := database.DB.Preload("Role").Find(&users).Error; err != nil {
-		helpers.Respond(c, false, nil, err.Error())
+	pagination, err := helpers.Paginate(query, params, &users)
+	if err != nil {
+		helpers.Respond(c, false, nil, "Failed to retrieve users")
 		return
 	}
-	helpers.Respond(c, true, users, "Failed to retrive users")
 
+	helpers.RespondWithPagin(c, true, users, "Users retrieved successfully", pagination)
 }
 func ToggleUserActivation(c *gin.Context) {
 	userID := c.Param("id")
@@ -90,4 +107,29 @@ func ToggleUserActivation(c *gin.Context) {
 	database.DB.Preload("Role").First(&user)
 
 	helpers.Respond(c, true, user, "User updated successfully")
+}
+
+func DeleteUser(c *gin.Context) {
+	var user models.User
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	if err := database.DB.Preload("Role").First(&user, id).Error; err != nil {
+		helpers.RespondNotFound(c, "User not found")
+		return
+	}
+	roleValueAny, _ := c.Get("role_value")
+	roleValue, _ := roleValueAny.(string)
+	if user.Role != nil &&
+		models.IsSuperAdmin(user.Role.RoleValue) &&
+		models.IsAdmin(roleValue) {
+		helpers.RespondForbiden(c, "Admins cannot operate super admins")
+		return
+	}
+
+	if err := database.DB.Delete(&user).Error; err != nil {
+		helpers.Respond(c, false, nil, "Failed to delete user")
+		return
+	}
+
+	helpers.RespondSuccess(c, nil, "User deleted successfully")
 }
