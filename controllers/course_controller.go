@@ -14,7 +14,7 @@ func GetCourses(c *gin.Context) {
 	var courses []models.Course
 	params := helpers.GetPaginationParams(c)
 
-	query := database.DB.Model(&models.Course{})
+	query := database.DB.Model(&models.Course{}).Preload("Chapters").Preload("Teachers.User")
 	pagination, err := helpers.Paginate(query, params, &courses)
 
 	if err != nil {

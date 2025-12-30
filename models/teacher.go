@@ -15,8 +15,9 @@ type Teacher struct {
 
 	User     *User     `gorm:"foreignKey:UserID;references:ID" json:"user,omitempty"`
 	Students []Student `gorm:"foreignKey:TeacherID" json:"students,omitempty"`
-	Courses  []Course  `gorm:"many2many:teacher_courses" json:"courses,omitempty"` // ← Added
-	Lessons  []Lesson  `gorm:"foreignKey:TeacherID" json:"lessons,omitempty"`      // ← Added
+	Courses  []Course  `gorm:"many2many:teacher_courses" json:"courses,omitempty"`
+	Chapters []Chapter `gorm:"foreignKey:TeacherID" json:"chapters,omitempty"`
+	Lessons  []Lesson  `gorm:"foreignKey:TeacherID" json:"lessons,omitempty"`
 }
 
 func (Teacher) TableName() string {

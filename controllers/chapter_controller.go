@@ -14,7 +14,7 @@ func GetChapters(c *gin.Context) {
 	courseID := c.Query("course_id")
 	var chapters []models.Chapter
 
-	query := database.DB
+	query := database.DB.Preload("Course").Preload("Teacher.User")
 
 	if courseID != "" {
 		query = query.Where("course_id = ?", courseID)
@@ -34,7 +34,7 @@ func GetChapter(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var chapter models.Chapter
 
-	res := database.DB.Preload("Course").Preload("Lessons.Teacher.User").First(&chapter, id)
+	res := database.DB.Preload("Course").Preload("Teacher.User").Preload("Lessons.Teacher.User").First(&chapter, id)
 	if res.Error != nil {
 		helpers.Respond(c, false, nil, "Chapter not found")
 		return
@@ -59,6 +59,13 @@ func CreateChapter(c *gin.Context) {
 		return
 	}
 
+	// Verify teacher exists
+	var teacher models.Teacher
+	if err := database.DB.First(&teacher, req.TeacherID).Error; err != nil {
+		helpers.Respond(c, false, nil, "Teacher not found")
+		return
+	}
+
 	// Set default order if not provided
 	if req.Order == 0 {
 		var maxOrder int
@@ -68,6 +75,7 @@ func CreateChapter(c *gin.Context) {
 
 	chapter := models.Chapter{
 		CourseID:    req.CourseID,
+		TeacherID:   req.TeacherID,
 		Name:        req.Name,
 		Order:       req.Order,
 		Description: req.Description,
@@ -78,7 +86,7 @@ func CreateChapter(c *gin.Context) {
 		return
 	}
 
-	database.DB.Preload("Course").First(&chapter, chapter.ID)
+	database.DB.Preload("Course").Preload("Teacher.User").First(&chapter, chapter.ID)
 
 	helpers.Respond(c, true, chapter, "Chapter created successfully")
 }
@@ -114,7 +122,7 @@ func UpdateChapter(c *gin.Context) {
 		return
 	}
 
-	database.DB.Preload("Course").First(&chapter, chapter.ID)
+	database.DB.Preload("Course").Preload("Teacher.User").First(&chapter, chapter.ID)
 
 	helpers.Respond(c, true, chapter, "Chapter updated successfully")
 }

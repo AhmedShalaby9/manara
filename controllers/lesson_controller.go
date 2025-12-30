@@ -15,7 +15,7 @@ func GetLessons(c *gin.Context) {
 	teacherID := c.Query("teacher_id")
 	var lessons []models.Lesson
 
-	query := database.DB.Preload("Chapter")
+	query := database.DB.Preload("Chapter").Preload("Teacher.User")
 
 	if chapterID != "" {
 		query = query.Where("chapter_id = ?", chapterID)
