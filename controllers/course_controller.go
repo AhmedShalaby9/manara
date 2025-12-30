@@ -39,8 +39,8 @@ func GetCourse(c *gin.Context) {
 }
 
 func CreateCourse(c *gin.Context) {
-	name := c.Query("name")
-	description := c.Query("description")
+	name := c.PostForm("name")
+	description := c.PostForm("description")
 
 	if name == "" {
 		helpers.Respond(c, false, nil, "Name is required")
@@ -88,8 +88,8 @@ func UpdateCourse(c *gin.Context) {
 		return
 	}
 
-	name := c.Query("name")
-	description := c.Query("description")
+	name := c.PostForm("name")
+	description := c.PostForm("description")
 
 	if name != "" {
 		course.Name = name
