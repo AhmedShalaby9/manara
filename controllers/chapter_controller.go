@@ -59,13 +59,6 @@ func CreateChapter(c *gin.Context) {
 		return
 	}
 
-	// Verify teacher exists
-	var teacher models.Teacher
-	if err := database.DB.First(&teacher, req.TeacherID).Error; err != nil {
-		helpers.Respond(c, false, nil, "Teacher not found")
-		return
-	}
-
 	// Set default order if not provided
 	if req.Order == 0 {
 		var maxOrder int
@@ -75,7 +68,6 @@ func CreateChapter(c *gin.Context) {
 
 	chapter := models.Chapter{
 		CourseID:    req.CourseID,
-		TeacherID:   req.TeacherID,
 		Name:        req.Name,
 		Order:       req.Order,
 		Description: req.Description,
