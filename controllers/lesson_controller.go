@@ -9,19 +9,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetLessons - Get all lessons (filter by chapter or teacher)
+// GetLessons - Get all lessons (filter by chapter, teacher, or search by name)
 func GetLessons(c *gin.Context) {
 	chapterID := c.Query("chapter_id")
 	teacherID := c.Query("teacher_id")
+	search := c.Query("search")
 	var lessons []models.Lesson
 
-	query := database.DB.Preload("Chapter").Preload("Teacher.User")
+	query := database.DB.Preload("Chapter.Course").Preload("Teacher.User")
 
 	if chapterID != "" {
 		query = query.Where("chapter_id = ?", chapterID)
 	}
 	if teacherID != "" {
 		query = query.Where("teacher_id = ?", teacherID)
+	}
+	if search != "" {
+		query = query.Where("name LIKE ?", "%"+search+"%")
 	}
 
 	res := query.Order("`order` ASC").Find(&lessons)
