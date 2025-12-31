@@ -14,6 +14,7 @@ func GetStudents(c *gin.Context) {
 	var students []models.Student
 	teacherID := c.Query("teacher_id")
 	gradeLevel := c.Query("grade_level")
+	academicYearID := c.Query("academic_year_id")
 	search := c.Query("search")
 
 	params := helpers.GetPaginationParams(c)
@@ -24,6 +25,9 @@ func GetStudents(c *gin.Context) {
 	}
 	if gradeLevel != "" {
 		query = query.Where("grade_level = ?", gradeLevel)
+	}
+	if academicYearID != "" {
+		query = query.Where("academic_year_id = ?", academicYearID)
 	}
 	if search != "" {
 		query = query.Joins("JOIN users ON users.id = students.user_id").
