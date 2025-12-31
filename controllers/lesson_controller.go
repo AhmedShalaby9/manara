@@ -16,7 +16,8 @@ func GetLessons(c *gin.Context) {
 	search := c.Query("search")
 	var lessons []models.Lesson
 
-	query := database.DB.Preload("Chapter.Course").Preload("Teacher.User")
+	params := helpers.GetPaginationParams(c)
+	query := database.DB.Model(&models.Lesson{}).Preload("Chapter.Course").Preload("Teacher.User")
 
 	if chapterID != "" {
 		query = query.Where("chapter_id = ?", chapterID)
@@ -28,13 +29,14 @@ func GetLessons(c *gin.Context) {
 		query = query.Where("name LIKE ?", "%"+search+"%")
 	}
 
-	res := query.Order("`order` ASC").Find(&lessons)
-	if res.Error != nil {
-		helpers.Respond(c, false, nil, res.Error.Error())
+	query = query.Order("`order` ASC")
+	pagination, err := helpers.Paginate(query, params, &lessons)
+	if err != nil {
+		helpers.Respond(c, false, nil, "Failed to retrieve lessons")
 		return
 	}
 
-	helpers.Respond(c, true, lessons, "Lessons retrieved successfully")
+	helpers.RespondWithPagin(c, true, lessons, "Lessons retrieved successfully", pagination)
 }
 
 // GetLesson - Get single lesson

@@ -16,7 +16,8 @@ func GetChapters(c *gin.Context) {
 	search := c.Query("search")
 	var chapters []models.Chapter
 
-	query := database.DB.Preload("Course").Preload("Teacher.User")
+	params := helpers.GetPaginationParams(c)
+	query := database.DB.Model(&models.Chapter{}).Preload("Course").Preload("Teacher.User")
 
 	if courseID != "" {
 		query = query.Where("course_id = ?", courseID)
@@ -28,13 +29,14 @@ func GetChapters(c *gin.Context) {
 		query = query.Where("name LIKE ?", "%"+search+"%")
 	}
 
-	res := query.Order("`order` ASC").Find(&chapters)
-	if res.Error != nil {
-		helpers.Respond(c, false, nil, res.Error.Error())
+	query = query.Order("`order` ASC")
+	pagination, err := helpers.Paginate(query, params, &chapters)
+	if err != nil {
+		helpers.Respond(c, false, nil, "Failed to retrieve chapters")
 		return
 	}
 
-	helpers.Respond(c, true, chapters, "Chapters retrieved successfully")
+	helpers.RespondWithPagin(c, true, chapters, "Chapters retrieved successfully", pagination)
 }
 
 // GetChapter - Get single chapter
