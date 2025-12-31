@@ -14,7 +14,7 @@ func GetTeachers(c *gin.Context) {
 	var teachers []models.Teacher
 
 	params := helpers.GetPaginationParams(c)
-	query := database.DB.Model(&models.Teacher{}).Preload("User.Role").Preload("Courses")
+	query := database.DB.Model(&models.Teacher{}).Preload("User").Preload("Courses")
 
 	pagination, res := helpers.Paginate(query, params, &teachers)
 	if res != nil {
