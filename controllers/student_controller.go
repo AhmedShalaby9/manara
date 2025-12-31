@@ -14,23 +14,29 @@ func GetStudents(c *gin.Context) {
 	var students []models.Student
 	teacherID := c.Query("teacher_id")
 	gradeLevel := c.Query("grade_level")
+	search := c.Query("search")
 
-	query := database.DB
+	params := helpers.GetPaginationParams(c)
+	query := database.DB.Model(&models.Student{}).Preload("User").Preload("Teacher.User").Preload("AcademicYear")
 
 	if teacherID != "" {
 		query = query.Where("teacher_id = ?", teacherID)
 	}
 	if gradeLevel != "" {
-		query = query.Where("grade_level =?", gradeLevel)
+		query = query.Where("grade_level = ?", gradeLevel)
+	}
+	if search != "" {
+		query = query.Joins("JOIN users ON users.id = students.user_id").
+			Where("users.first_name LIKE ? OR users.last_name LIKE ? OR users.email LIKE ?", "%"+search+"%", "%"+search+"%", "%"+search+"%")
 	}
 
-	res := query.Preload("User").Preload("Teacher.User").Preload("AcademicYear").Find(&students)
-	if res.Error != nil {
-		helpers.Respond(c, false, nil, res.Error.Error())
+	pagination, err := helpers.Paginate(query, params, &students)
+	if err != nil {
+		helpers.Respond(c, false, nil, "Failed to retrieve students")
 		return
 	}
 
-	helpers.Respond(c, true, students, "Students retrieved successfully")
+	helpers.RespondWithPagin(c, true, students, "Students retrieved successfully", pagination)
 }
 
 func GetStudent(c *gin.Context) {
