@@ -75,6 +75,8 @@ func AutoMigrate() error {
 		&models.Course{},
 		&models.Chapter{},
 		&models.Lesson{},
+		&models.LessonFile{},
+		&models.LessonVideo{},
 		&models.TeacherCourse{},
 	)
 

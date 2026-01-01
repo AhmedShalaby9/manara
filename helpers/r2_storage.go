@@ -202,6 +202,15 @@ func DeleteFromR2(fileURL string) error {
 	return nil
 }
 
+// GetFileExtension returns the file extension without the dot
+func GetFileExtension(filename string) string {
+	ext := strings.ToLower(filepath.Ext(filename))
+	if len(ext) > 0 {
+		return ext[1:] // Remove the leading dot
+	}
+	return ""
+}
+
 // getContentType returns the MIME type for a file extension
 func getContentType(ext string) string {
 	contentTypes := map[string]string{
