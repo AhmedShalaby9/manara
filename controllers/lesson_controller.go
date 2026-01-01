@@ -17,7 +17,7 @@ func GetLessons(c *gin.Context) {
 	var lessons []models.Lesson
 
 	params := helpers.GetPaginationParams(c)
-	query := database.DB.Model(&models.Lesson{}).Preload("Chapter.Course").Preload("Teacher.User")
+	query := database.DB.Model(&models.Lesson{})
 
 	if chapterID != "" {
 		query = query.Where("chapter_id = ?", chapterID)
