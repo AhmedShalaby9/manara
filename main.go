@@ -42,7 +42,7 @@ func main() {
 	if err != nil {
 		log.Printf("⚠️ R2 storage not configured: %v (file uploads will fail)", err)
 	} else {
-		log.Println("✅ R2 cloud storage initialized")
+		log.Println("✅ R2 cloud storage initialized good")
 	}
 
 	// Run migrations if flag is set (AFTER connection)
