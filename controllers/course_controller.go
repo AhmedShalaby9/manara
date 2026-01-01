@@ -4,7 +4,6 @@ import (
 	"manara/database"
 	"manara/helpers"
 	"manara/models"
-	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -50,12 +49,7 @@ func CreateCourse(c *gin.Context) {
 	var imageURL string
 	file, err := c.FormFile("image")
 	if err == nil {
-		baseURL := os.Getenv("APP_URL")
-		if baseURL == "" {
-			baseURL = "http://localhost:" + os.Getenv("APP_PORT")
-		}
-
-		imageURL, err = helpers.UploadImage(file, "courses", baseURL)
+		imageURL, err = helpers.UploadImageToR2(file, "courses")
 		if err != nil {
 			helpers.Respond(c, false, nil, err.Error())
 			return
@@ -70,7 +64,7 @@ func CreateCourse(c *gin.Context) {
 
 	if err := database.DB.Create(&course).Error; err != nil {
 		if imageURL != "" {
-			helpers.DeleteImage(imageURL)
+			helpers.DeleteFromR2(imageURL)
 		}
 		helpers.Respond(c, false, nil, "Failed to create course")
 		return
@@ -102,12 +96,7 @@ func UpdateCourse(c *gin.Context) {
 	if err == nil {
 		oldImageURL := course.ImageURL
 
-		baseURL := os.Getenv("APP_URL")
-		if baseURL == "" {
-			baseURL = "http://localhost:" + os.Getenv("APP_PORT")
-		}
-
-		newImageURL, err := helpers.UploadImage(file, "courses", baseURL)
+		newImageURL, err := helpers.UploadImageToR2(file, "courses")
 		if err != nil {
 			helpers.Respond(c, false, nil, err.Error())
 			return
@@ -116,7 +105,7 @@ func UpdateCourse(c *gin.Context) {
 		course.ImageURL = newImageURL
 
 		if oldImageURL != "" {
-			helpers.DeleteImage(oldImageURL)
+			helpers.DeleteFromR2(oldImageURL)
 		}
 	}
 
@@ -140,7 +129,7 @@ func DeleteCourse(c *gin.Context) {
 
 	// Delete image if exists
 	if course.ImageURL != "" {
-		helpers.DeleteImage(course.ImageURL)
+		helpers.DeleteFromR2(course.ImageURL)
 	}
 
 	if err := database.DB.Delete(&course).Error; err != nil {
@@ -171,13 +160,8 @@ func UploadCourseImage(c *gin.Context) {
 	// Save old image URL
 	oldImageURL := course.ImageURL
 
-	baseURL := os.Getenv("APP_URL")
-	if baseURL == "" {
-		baseURL = "http://localhost:" + os.Getenv("APP_PORT")
-	}
-
-	// Upload new image
-	imageURL, err := helpers.UploadImage(file, "courses", baseURL)
+	// Upload new image to R2
+	imageURL, err := helpers.UploadImageToR2(file, "courses")
 	if err != nil {
 		helpers.Respond(c, false, nil, err.Error())
 		return
@@ -187,14 +171,14 @@ func UploadCourseImage(c *gin.Context) {
 	course.ImageURL = imageURL
 	if err := database.DB.Save(&course).Error; err != nil {
 		// Delete newly uploaded image if database update fails
-		helpers.DeleteImage(imageURL)
+		helpers.DeleteFromR2(imageURL)
 		helpers.Respond(c, false, nil, "Failed to update course")
 		return
 	}
 
 	// Delete old image after successful update
 	if oldImageURL != "" {
-		helpers.DeleteImage(oldImageURL)
+		helpers.DeleteFromR2(oldImageURL)
 	}
 
 	helpers.Respond(c, true, course, "Course image uploaded successfully")
@@ -215,8 +199,8 @@ func DeleteCourseImage(c *gin.Context) {
 		return
 	}
 
-	// Delete image file
-	if err := helpers.DeleteImage(course.ImageURL); err != nil {
+	// Delete image file from R2
+	if err := helpers.DeleteFromR2(course.ImageURL); err != nil {
 		helpers.Respond(c, false, nil, "Failed to delete image file")
 		return
 	}

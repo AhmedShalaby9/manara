@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"manara/database"
+	"manara/helpers"
 	"manara/routes"
 	"os"
 
@@ -35,6 +36,14 @@ func main() {
 		log.Fatalf("❌ Database connection failed: %v", err)
 	}
 	defer database.Close()
+
+	// Initialize R2 cloud storage
+	err = helpers.InitR2Client()
+	if err != nil {
+		log.Printf("⚠️ R2 storage not configured: %v (file uploads will fail)", err)
+	} else {
+		log.Println("✅ R2 cloud storage initialized")
+	}
 
 	// Run migrations if flag is set (AFTER connection)
 	if *migrate {
