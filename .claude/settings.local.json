@@ -4,7 +4,11 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(go build:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(xargs cat:*)",
+      "Bash(go mod tidy:*)"
     ]
   }
 }
