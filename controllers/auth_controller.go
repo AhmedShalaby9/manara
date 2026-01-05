@@ -55,10 +55,17 @@ func RegisterStudent(c *gin.Context) {
 		return
 	}
 
+	// Get student role by value
+	var studentRole models.Role
+	if err := database.DB.Where("role_value = ?", "student").First(&studentRole).Error; err != nil {
+		helpers.Respond(c, false, nil, "Student role not found")
+		return
+	}
+
 	// Start transaction
 	tx := database.DB.Begin()
 
-	// Create user with student role (role_id = 4)
+	// Create user with student role
 	user := models.User{
 		FirstName:    req.FirstName,
 		LastName:     req.LastName,
@@ -66,7 +73,7 @@ func RegisterStudent(c *gin.Context) {
 		Phone:        req.Phone,
 		UserName:     req.UserName,
 		PasswordHash: hashedPassword,
-		RoleID:       4, // Student role
+		RoleID:       studentRole.ID,
 		IsActive:     false,
 	}
 

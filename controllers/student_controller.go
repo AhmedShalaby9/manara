@@ -101,6 +101,13 @@ func CreateStudent(c *gin.Context) {
 		return
 	}
 
+	// Get student role by value
+	var studentRole models.Role
+	if err := database.DB.Where("role_value = ?", "student").First(&studentRole).Error; err != nil {
+		helpers.Respond(c, false, nil, "Student role not found")
+		return
+	}
+
 	tx := database.DB.Begin()
 
 	user := models.User{
@@ -110,7 +117,7 @@ func CreateStudent(c *gin.Context) {
 		Phone:        req.Phone,
 		UserName:     req.UserName,
 		PasswordHash: hashedPassword,
-		RoleID:       4,
+		RoleID:       studentRole.ID,
 		IsActive:     true,
 	}
 
