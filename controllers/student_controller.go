@@ -118,7 +118,7 @@ func CreateStudent(c *gin.Context) {
 		UserName:     req.UserName,
 		PasswordHash: hashedPassword,
 		RoleID:       studentRole.ID,
-		IsActive:     true,
+		IsActive:     false, // Requires approval
 	}
 
 	if err := tx.Create(&user).Error; err != nil {
