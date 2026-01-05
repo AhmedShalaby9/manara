@@ -10,7 +10,7 @@ import (
 )
 
 func CreateUser(c *gin.Context) {
-	var req models.RegisterRequest
+	var req models.CreateUserRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		helpers.Respond(c, false, nil, err.Error())

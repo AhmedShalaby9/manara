@@ -10,7 +10,7 @@ import (
 func AuthRoutes(router gin.IRouter) {
 	auth := router.Group("/auth")
 	{
-		auth.POST("/register", controllers.Register)
+		auth.POST("/register", controllers.RegisterStudent) // Mobile app student registration
 		auth.POST("/login", controllers.Login)
 		auth.PATCH("/change-password/:id", controllers.ChangePassword)
 		auth.GET("/me", middleware.AuthMiddleware(), controllers.GetMe)

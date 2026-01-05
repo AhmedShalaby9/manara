@@ -11,12 +11,27 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Register - Register a new user
-func Register(c *gin.Context) {
-	var req models.RegisterRequest
+// RegisterStudent - Register a new student (for mobile app)
+// Student provides their teacher's username to link to the correct teacher
+func RegisterStudent(c *gin.Context) {
+	var req models.RegisterStudentRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		helpers.Respond(c, false, nil, err.Error())
+		return
+	}
+
+	// Find teacher by username
+	var teacherUser models.User
+	if err := database.DB.Where("user_name = ?", req.TeacherUserName).First(&teacherUser).Error; err != nil {
+		helpers.Respond(c, false, nil, "Teacher not found")
+		return
+	}
+
+	// Get the teacher record
+	var teacher models.Teacher
+	if err := database.DB.Where("user_id = ?", teacherUser.ID).First(&teacher).Error; err != nil {
+		helpers.Respond(c, false, nil, "Teacher not found")
 		return
 	}
 
@@ -40,7 +55,10 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// Create user
+	// Start transaction
+	tx := database.DB.Begin()
+
+	// Create user with student role (role_id = 4)
 	user := models.User{
 		FirstName:    req.FirstName,
 		LastName:     req.LastName,
@@ -48,26 +66,36 @@ func Register(c *gin.Context) {
 		Phone:        req.Phone,
 		UserName:     req.UserName,
 		PasswordHash: hashedPassword,
-		RoleID:       req.RoleID,
+		RoleID:       4, // Student role
 		IsActive:     false,
 	}
 
-	if err := database.DB.Create(&user).Error; err != nil {
+	if err := tx.Create(&user).Error; err != nil {
+		tx.Rollback()
 		helpers.Respond(c, false, nil, "Failed to create user")
 		return
 	}
 
+	// Create student record linked to teacher
+	student := models.Student{
+		UserID:      user.ID,
+		TeacherID:   teacher.ID,
+		ParentPhone: req.ParentPhone,
+	}
+
+	if err := tx.Create(&student).Error; err != nil {
+		tx.Rollback()
+		helpers.Respond(c, false, nil, "Failed to create student")
+		return
+	}
+
+	tx.Commit()
+
 	// Load user with role
 	database.DB.Preload("Role").First(&user, user.ID)
 
-	// Get role value
-	roleValue := ""
-	if user.Role != nil {
-		roleValue = user.Role.RoleValue
-	}
-
-	// Generate token (no teacher_id for registration - they need to be set up as teacher separately)
-	token, err := helpers.GenerateToken(user.ID, user.UserName, user.RoleID, roleValue, nil)
+	// Generate token
+	token, err := helpers.GenerateToken(user.ID, user.UserName, user.RoleID, "student", nil)
 	if err != nil {
 		helpers.Respond(c, false, nil, "Failed to generate token")
 		return
@@ -81,7 +109,7 @@ func Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,
 		"data":    response,
-		"message": "User registered successfully",
+		"message": "Student registered successfully",
 	})
 }
 
