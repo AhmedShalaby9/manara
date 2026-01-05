@@ -57,15 +57,21 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// Generate token
-	token, err := helpers.GenerateToken(user.ID, user.UserName, user.RoleID)
+	// Load user with role
+	database.DB.Preload("Role").First(&user, user.ID)
+
+	// Get role value
+	roleValue := ""
+	if user.Role != nil {
+		roleValue = user.Role.RoleValue
+	}
+
+	// Generate token (no teacher_id for registration - they need to be set up as teacher separately)
+	token, err := helpers.GenerateToken(user.ID, user.UserName, user.RoleID, roleValue, nil)
 	if err != nil {
 		helpers.Respond(c, false, nil, "Failed to generate token")
 		return
 	}
-
-	// Load user with role
-	database.DB.Preload("Role").First(&user, user.ID)
 
 	response := models.AuthResponse{
 		Token: token,
@@ -88,9 +94,9 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Find user by username
+	// Find user by username with role
 	var user models.User
-	if err := database.DB.Where("user_name = ?", req.UserName).First(&user).Error; err != nil {
+	if err := database.DB.Preload("Role").Where("user_name = ?", req.UserName).First(&user).Error; err != nil {
 		helpers.Respond(c, false, nil, "Invalid username or password")
 		return
 	}
@@ -107,15 +113,27 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Generate token
-	token, err := helpers.GenerateToken(user.ID, user.UserName, user.RoleID)
+	// Get role value
+	roleValue := ""
+	if user.Role != nil {
+		roleValue = user.Role.RoleValue
+	}
+
+	// Check if user is a teacher and get teacher_id
+	var teacherID *uint
+	if roleValue == "teacher" {
+		var teacher models.Teacher
+		if err := database.DB.Where("user_id = ?", user.ID).First(&teacher).Error; err == nil {
+			teacherID = &teacher.ID
+		}
+	}
+
+	// Generate token with role_value and teacher_id
+	token, err := helpers.GenerateToken(user.ID, user.UserName, user.RoleID, roleValue, teacherID)
 	if err != nil {
 		helpers.Respond(c, false, nil, "Failed to generate token")
 		return
 	}
-
-	// Load user with role
-	database.DB.Preload("Role").First(&user, user.ID)
 
 	response := models.AuthResponse{
 		Token: token,

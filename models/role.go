@@ -25,5 +25,5 @@ func IsSuperAdmin(roleValue string) bool {
 	return roleValue == "super_admin"
 }
 func IsTeacher(roleValue string) bool {
-	return roleValue == "super_admin"
+	return roleValue == "teacher"
 }

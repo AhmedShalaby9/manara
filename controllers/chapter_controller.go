@@ -10,20 +10,23 @@ import (
 )
 
 // GetChapters - Get all chapters (optionally filter by course, teacher, or search by name)
+// For teachers: automatically filtered to their own chapters
+// For admins: can filter by teacher_id query param or see all
 func GetChapters(c *gin.Context) {
 	courseID := c.Query("course_id")
-	teacherID := c.Query("teacher_id")
 	search := c.Query("search")
 	var chapters []models.Chapter
 
 	params := helpers.GetPaginationParams(c)
 	query := database.DB.Model(&models.Chapter{}).Preload("Course").Preload("Teacher.User")
 
+	// Role-based teacher scoping
+	if teacherID := helpers.GetEffectiveTeacherID(c); teacherID != nil {
+		query = query.Where("teacher_id = ?", *teacherID)
+	}
+
 	if courseID != "" {
 		query = query.Where("course_id = ?", courseID)
-	}
-	if teacherID != "" {
-		query = query.Where("teacher_id = ?", teacherID)
 	}
 	if search != "" {
 		query = query.Where("name LIKE ?", "%"+search+"%")
@@ -54,11 +57,20 @@ func GetChapter(c *gin.Context) {
 }
 
 // CreateChapter - Create a new chapter
+// For teachers: teacher_id is automatically set from token
+// For admins: teacher_id must be provided in request
 func CreateChapter(c *gin.Context) {
 	var req models.CreateChapterRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		helpers.Respond(c, false, nil, err.Error())
+		return
+	}
+
+	// Get effective teacher_id based on role
+	teacherID, ok := helpers.GetTeacherIDForCreate(c, req.TeacherID)
+	if !ok {
+		helpers.Respond(c, false, nil, "Teacher ID is required")
 		return
 	}
 
@@ -71,7 +83,7 @@ func CreateChapter(c *gin.Context) {
 
 	// Verify teacher exists
 	var teacher models.Teacher
-	if err := database.DB.First(&teacher, req.TeacherID).Error; err != nil {
+	if err := database.DB.First(&teacher, teacherID).Error; err != nil {
 		helpers.Respond(c, false, nil, "Teacher not found")
 		return
 	}
@@ -85,7 +97,7 @@ func CreateChapter(c *gin.Context) {
 
 	chapter := models.Chapter{
 		CourseID:    req.CourseID,
-		TeacherID:   req.TeacherID,
+		TeacherID:   teacherID,
 		Name:        req.Name,
 		Order:       req.Order,
 		Description: req.Description,

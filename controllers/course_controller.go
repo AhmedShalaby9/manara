@@ -260,7 +260,7 @@ func AssignCourseToTeacher(c *gin.Context) {
 	helpers.Respond(c, true, teacherCourse, "Course assigned successfully")
 }
 
-// GetTeacherCourses - Get courses for a specific teacher
+// GetTeacherCourses - Get courses for a specific teacher (admin route)
 func GetTeacherCourses(c *gin.Context) {
 	teacherID, _ := strconv.Atoi(c.Param("teacher_id"))
 
@@ -271,4 +271,22 @@ func GetTeacherCourses(c *gin.Context) {
 	}
 
 	helpers.Respond(c, true, teacher.Courses, "Teacher courses retrieved successfully")
+}
+
+// GetMyCourses - Get courses for the authenticated teacher
+// Teachers use this to get their own courses without passing teacher_id
+func GetMyCourses(c *gin.Context) {
+	teacherID, exists := c.Get("teacher_id")
+	if !exists {
+		helpers.Respond(c, false, nil, "You are not a teacher")
+		return
+	}
+
+	var teacher models.Teacher
+	if err := database.DB.Preload("Courses.Chapters").First(&teacher, teacherID).Error; err != nil {
+		helpers.Respond(c, false, nil, "Teacher not found")
+		return
+	}
+
+	helpers.Respond(c, true, teacher.Courses, "My courses retrieved successfully")
 }

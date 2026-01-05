@@ -61,7 +61,7 @@ func (Lesson) TableName() string {
 
 type CreateLessonRequest struct {
 	ChapterID   uint   `json:"chapter_id" binding:"required"`
-	TeacherID   uint   `json:"teacher_id" binding:"required"`
+	TeacherID   uint   `json:"teacher_id"` // Optional for teachers (auto-filled from token), required for admins
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
 	Order       int    `json:"order"`

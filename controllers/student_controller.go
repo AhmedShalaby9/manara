@@ -10,9 +10,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetStudents - Get all students
+// For teachers: automatically filtered to their own students
+// For admins: can filter by teacher_id query param or see all
 func GetStudents(c *gin.Context) {
 	var students []models.Student
-	teacherID := c.Query("teacher_id")
 	gradeLevel := c.Query("grade_level")
 	academicYearID := c.Query("academic_year_id")
 	search := c.Query("search")
@@ -20,9 +22,11 @@ func GetStudents(c *gin.Context) {
 	params := helpers.GetPaginationParams(c)
 	query := database.DB.Model(&models.Student{}).Preload("User").Preload("Teacher.User").Preload("AcademicYear")
 
-	if teacherID != "" {
-		query = query.Where("teacher_id = ?", teacherID)
+	// Role-based teacher scoping
+	if teacherID := helpers.GetEffectiveTeacherID(c); teacherID != nil {
+		query = query.Where("teacher_id = ?", *teacherID)
 	}
+
 	if gradeLevel != "" {
 		query = query.Where("grade_level = ?", gradeLevel)
 	}
@@ -56,11 +60,21 @@ func GetStudent(c *gin.Context) {
 	helpers.Respond(c, true, student, "Student retrieved successfully")
 }
 
+// CreateStudent - Create a new student
+// For teachers: teacher_id is automatically set from token
+// For admins: teacher_id must be provided in request
 func CreateStudent(c *gin.Context) {
 	var req models.CreateStudentRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		helpers.Respond(c, false, nil, err.Error())
+		return
+	}
+
+	// Get effective teacher_id based on role
+	teacherID, ok := helpers.GetTeacherIDForCreate(c, req.TeacherID)
+	if !ok {
+		helpers.Respond(c, false, nil, "Teacher ID is required")
 		return
 	}
 
@@ -108,7 +122,7 @@ func CreateStudent(c *gin.Context) {
 
 	student := models.Student{
 		UserID:         user.ID,
-		TeacherID:      req.TeacherID,
+		TeacherID:      teacherID,
 		AcademicYearID: req.AcademicYearID,
 		ParentPhone:    req.ParentPhone,
 	}

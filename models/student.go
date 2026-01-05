@@ -29,7 +29,7 @@ type CreateStudentRequest struct {
 	Phone          string `json:"phone"`
 	UserName       string `json:"user_name" binding:"required"`
 	Password       string `json:"password" binding:"required,min=6"`
-	TeacherID      uint   `json:"teacher_id" binding:"required"`
+	TeacherID      uint   `json:"teacher_id"` // Optional for teachers (auto-filled from token), required for admins
 	AcademicYearID uint   `json:"academic_year_id" binding:"required"`
 	ParentPhone    string `json:"parent_phone"`
 }
