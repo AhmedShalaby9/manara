@@ -9,27 +9,23 @@ import (
 
 func LessonRoutes(router gin.IRouter) {
 	lessons := router.Group("/lessons")
+	lessons.Use(middleware.AuthMiddleware()) // All lesson routes require auth
+	lessons.Use(middleware.RoleMiddleware("admin", "super_admin", "teacher"))
 	{
 		lessons.GET("", controllers.GetLessons)
 		lessons.GET("/:id", controllers.GetLesson)
 		lessons.GET("/:id/files", controllers.GetLessonFiles)
 		lessons.GET("/:id/videos", controllers.GetLessonVideos)
+		lessons.POST("", controllers.CreateLesson)
+		lessons.PUT("/:id", controllers.UpdateLesson)
+		lessons.DELETE("/:id", controllers.DeleteLesson)
 
-		teacherAndAdmin := lessons.Group("")
-		teacherAndAdmin.Use(middleware.AuthMiddleware())
-		teacherAndAdmin.Use(middleware.RoleMiddleware("admin", "super_admin", "teacher"))
-		{
-			teacherAndAdmin.POST("", controllers.CreateLesson)
-			teacherAndAdmin.PUT("/:id", controllers.UpdateLesson)
-			teacherAndAdmin.DELETE("/:id", controllers.DeleteLesson)
+		// File upload endpoints
+		lessons.POST("/:id/files", controllers.UploadLessonFiles)
+		lessons.DELETE("/:id/files/:file_id", controllers.DeleteLessonFile)
 
-			// File upload endpoints
-			teacherAndAdmin.POST("/:id/files", controllers.UploadLessonFiles)
-			teacherAndAdmin.DELETE("/:id/files/:file_id", controllers.DeleteLessonFile)
-
-			// Video upload endpoints
-			teacherAndAdmin.POST("/:id/videos", controllers.UploadLessonVideos)
-			teacherAndAdmin.DELETE("/:id/videos/:video_id", controllers.DeleteLessonVideo)
-		}
+		// Video upload endpoints
+		lessons.POST("/:id/videos", controllers.UploadLessonVideos)
+		lessons.DELETE("/:id/videos/:video_id", controllers.DeleteLessonVideo)
 	}
 }

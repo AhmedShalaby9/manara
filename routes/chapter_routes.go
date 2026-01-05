@@ -7,19 +7,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ChapterRoutes(router gin.IRouter) { // ← Changed
+func ChapterRoutes(router gin.IRouter) {
 	chapters := router.Group("/chapters")
+	chapters.Use(middleware.AuthMiddleware()) // All chapter routes require auth
+	chapters.Use(middleware.RoleMiddleware("admin", "super_admin", "teacher"))
 	{
 		chapters.GET("", controllers.GetChapters)
 		chapters.GET("/:id", controllers.GetChapter)
-
-		teacherAndAdmin := chapters.Group("")
-		teacherAndAdmin.Use(middleware.AuthMiddleware())
-		teacherAndAdmin.Use(middleware.RoleMiddleware("admin", "super_admin", "teacher"))
-		{
-			teacherAndAdmin.POST("", controllers.CreateChapter)
-			teacherAndAdmin.PUT("/:id", controllers.UpdateChapter)
-			teacherAndAdmin.DELETE("/:id", controllers.DeleteChapter)
-		}
+		chapters.POST("", controllers.CreateChapter)
+		chapters.PUT("/:id", controllers.UpdateChapter)
+		chapters.DELETE("/:id", controllers.DeleteChapter)
 	}
 }
