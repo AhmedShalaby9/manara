@@ -57,8 +57,8 @@ func GetChapter(c *gin.Context) {
 }
 
 // CreateChapter - Create a new chapter
-// For teachers: teacher_id is automatically set from token
-// For admins: teacher_id must be provided in request
+// For teachers: teacher_id and course_id are automatically set from token/teacher record
+// For admins: teacher_id and course_id must be provided in request
 func CreateChapter(c *gin.Context) {
 	var req models.CreateChapterRequest
 
@@ -74,29 +74,47 @@ func CreateChapter(c *gin.Context) {
 		return
 	}
 
-	// Verify course exists
-	var course models.Course
-	if err := database.DB.First(&course, req.CourseID).Error; err != nil {
-		helpers.Respond(c, false, nil, "Course not found")
-		return
-	}
-
-	// Verify teacher exists
+	// Verify teacher exists and get their course_id
 	var teacher models.Teacher
 	if err := database.DB.First(&teacher, teacherID).Error; err != nil {
 		helpers.Respond(c, false, nil, "Teacher not found")
 		return
 	}
 
+	// Determine course_id based on role
+	var courseID uint
+	if helpers.IsTeacher(c) {
+		// Teachers use their assigned course
+		if teacher.CourseID == nil {
+			helpers.Respond(c, false, nil, "Teacher has no assigned course")
+			return
+		}
+		courseID = *teacher.CourseID
+	} else {
+		// Admins must provide course_id
+		if req.CourseID == 0 {
+			helpers.Respond(c, false, nil, "Course ID is required")
+			return
+		}
+		courseID = req.CourseID
+	}
+
+	// Verify course exists
+	var course models.Course
+	if err := database.DB.First(&course, courseID).Error; err != nil {
+		helpers.Respond(c, false, nil, "Course not found")
+		return
+	}
+
 	// Set default order if not provided
 	if req.Order == 0 {
 		var maxOrder int
-		database.DB.Model(&models.Chapter{}).Where("course_id = ?", req.CourseID).Select("COALESCE(MAX(`order`), 0)").Scan(&maxOrder)
+		database.DB.Model(&models.Chapter{}).Where("course_id = ?", courseID).Select("COALESCE(MAX(`order`), 0)").Scan(&maxOrder)
 		req.Order = maxOrder + 1
 	}
 
 	chapter := models.Chapter{
-		CourseID:    req.CourseID,
+		CourseID:    courseID,
 		TeacherID:   teacherID,
 		Name:        req.Name,
 		Order:       req.Order,
