@@ -13,12 +13,12 @@ func CourseRoutes(router gin.IRouter) {
 		courses.GET("", controllers.GetCourses)
 		courses.GET("/:id", controllers.GetCourse)
 
-		// Teacher route - get my courses (authenticated teacher)
-		teacherRoutes := courses.Group("")
-		teacherRoutes.Use(middleware.AuthMiddleware())
-		teacherRoutes.Use(middleware.RoleMiddleware("teacher", "admin", "super_admin"))
+		// Get my courses (teacher sees their courses, student sees teacher's courses)
+		authRoutes := courses.Group("")
+		authRoutes.Use(middleware.AuthMiddleware())
+		authRoutes.Use(middleware.RoleMiddleware("teacher", "student", "admin", "super_admin"))
 		{
-			teacherRoutes.GET("/my", controllers.GetMyCourses)
+			authRoutes.GET("/my", controllers.GetMyCourses)
 		}
 
 		// Admin only routes

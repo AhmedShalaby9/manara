@@ -9,6 +9,7 @@ import (
 // GetEffectiveTeacherID returns the teacher_id to use for filtering data.
 // - For admins/super_admins: returns query param if provided, nil otherwise (all data)
 // - For teachers: always returns their own teacher_id from token (ignores query param)
+// - For students: returns their linked teacher_id from token (sees teacher's content)
 // - For other roles: returns nil
 func GetEffectiveTeacherID(c *gin.Context) *uint {
 	roleValue, _ := c.Get("role_value")
@@ -26,8 +27,8 @@ func GetEffectiveTeacherID(c *gin.Context) *uint {
 		return nil // No filter = all data for admins
 	}
 
-	// Teachers are ALWAYS scoped to their own data
-	if roleStr == "teacher" {
+	// Teachers and Students are scoped to teacher's data
+	if roleStr == "teacher" || roleStr == "student" {
 		if teacherID, exists := c.Get("teacher_id"); exists {
 			tid := teacherID.(uint)
 			return &tid

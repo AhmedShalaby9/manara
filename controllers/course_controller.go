@@ -273,12 +273,12 @@ func GetTeacherCourses(c *gin.Context) {
 	helpers.Respond(c, true, teacher.Courses, "Teacher courses retrieved successfully")
 }
 
-// GetMyCourses - Get courses for the authenticated teacher
-// Teachers use this to get their own courses without passing teacher_id
+// GetMyCourses - Get courses for the authenticated user
+// Teachers see their own courses, students see their teacher's courses
 func GetMyCourses(c *gin.Context) {
 	teacherID, exists := c.Get("teacher_id")
 	if !exists {
-		helpers.Respond(c, false, nil, "You are not a teacher")
+		helpers.Respond(c, false, nil, "No teacher associated with your account")
 		return
 	}
 
@@ -288,5 +288,5 @@ func GetMyCourses(c *gin.Context) {
 		return
 	}
 
-	helpers.Respond(c, true, teacher.Courses, "My courses retrieved successfully")
+	helpers.Respond(c, true, teacher.Courses, "Courses retrieved successfully")
 }

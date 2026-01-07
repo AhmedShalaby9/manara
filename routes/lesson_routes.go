@@ -9,23 +9,33 @@ import (
 
 func LessonRoutes(router gin.IRouter) {
 	lessons := router.Group("/lessons")
-	lessons.Use(middleware.AuthMiddleware()) // All lesson routes require auth
-	lessons.Use(middleware.RoleMiddleware("admin", "super_admin", "teacher"))
+	lessons.Use(middleware.AuthMiddleware())
 	{
-		lessons.GET("", controllers.GetLessons)
-		lessons.GET("/:id", controllers.GetLesson)
-		lessons.GET("/:id/files", controllers.GetLessonFiles)
-		lessons.GET("/:id/videos", controllers.GetLessonVideos)
-		lessons.POST("", controllers.CreateLesson)
-		lessons.PUT("/:id", controllers.UpdateLesson)
-		lessons.DELETE("/:id", controllers.DeleteLesson)
+		// Read access for all authenticated users (admin, teacher, student)
+		readAccess := lessons.Group("")
+		readAccess.Use(middleware.RoleMiddleware("admin", "super_admin", "teacher", "student"))
+		{
+			readAccess.GET("", controllers.GetLessons)
+			readAccess.GET("/:id", controllers.GetLesson)
+			readAccess.GET("/:id/files", controllers.GetLessonFiles)
+			readAccess.GET("/:id/videos", controllers.GetLessonVideos)
+		}
 
-		// File upload endpoints
-		lessons.POST("/:id/files", controllers.UploadLessonFiles)
-		lessons.DELETE("/:id/files/:file_id", controllers.DeleteLessonFile)
+		// Write access for admin and teacher only
+		writeAccess := lessons.Group("")
+		writeAccess.Use(middleware.RoleMiddleware("admin", "super_admin", "teacher"))
+		{
+			writeAccess.POST("", controllers.CreateLesson)
+			writeAccess.PUT("/:id", controllers.UpdateLesson)
+			writeAccess.DELETE("/:id", controllers.DeleteLesson)
 
-		// Video upload endpoints
-		lessons.POST("/:id/videos", controllers.UploadLessonVideos)
-		lessons.DELETE("/:id/videos/:video_id", controllers.DeleteLessonVideo)
+			// File upload endpoints
+			writeAccess.POST("/:id/files", controllers.UploadLessonFiles)
+			writeAccess.DELETE("/:id/files/:file_id", controllers.DeleteLessonFile)
+
+			// Video upload endpoints
+			writeAccess.POST("/:id/videos", controllers.UploadLessonVideos)
+			writeAccess.DELETE("/:id/videos/:video_id", controllers.DeleteLessonVideo)
+		}
 	}
 }

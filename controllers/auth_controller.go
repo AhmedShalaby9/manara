@@ -154,12 +154,18 @@ func Login(c *gin.Context) {
 		roleValue = user.Role.RoleValue
 	}
 
-	// Check if user is a teacher and get teacher_id
+	// Get teacher_id based on role
 	var teacherID *uint
 	if roleValue == "teacher" {
 		var teacher models.Teacher
 		if err := database.DB.Where("user_id = ?", user.ID).First(&teacher).Error; err == nil {
 			teacherID = &teacher.ID
+		}
+	} else if roleValue == "student" {
+		// For students, get their linked teacher's ID
+		var student models.Student
+		if err := database.DB.Where("user_id = ?", user.ID).First(&student).Error; err == nil {
+			teacherID = &student.TeacherID
 		}
 	}
 
