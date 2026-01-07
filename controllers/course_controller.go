@@ -215,7 +215,7 @@ func DeleteCourseImage(c *gin.Context) {
 	helpers.Respond(c, true, nil, "Course image deleted successfully")
 }
 
-// AssignCourseToTeacher - Assign a course to a teacher
+// AssignCourseToTeacher - Assign a course to a teacher (one course per teacher)
 func AssignCourseToTeacher(c *gin.Context) {
 	var req models.AssignCourseToTeacherRequest
 
@@ -238,44 +238,39 @@ func AssignCourseToTeacher(c *gin.Context) {
 		return
 	}
 
-	// Check if already assigned
-	var existing models.TeacherCourse
-	err := database.DB.Where("teacher_id = ? AND course_id = ?", req.TeacherID, req.CourseID).First(&existing).Error
-	if err == nil {
-		helpers.Respond(c, false, nil, "Course already assigned to this teacher")
-		return
-	}
-
-	// Assign course
-	teacherCourse := models.TeacherCourse{
-		TeacherID: req.TeacherID,
-		CourseID:  req.CourseID,
-	}
-
-	if err := database.DB.Create(&teacherCourse).Error; err != nil {
+	// Assign course to teacher (replaces any existing assignment)
+	teacher.CourseID = &req.CourseID
+	if err := database.DB.Save(&teacher).Error; err != nil {
 		helpers.Respond(c, false, nil, "Failed to assign course")
 		return
 	}
 
-	helpers.Respond(c, true, teacherCourse, "Course assigned successfully")
+	database.DB.Preload("User").Preload("Course").First(&teacher, teacher.ID)
+
+	helpers.Respond(c, true, teacher, "Course assigned successfully")
 }
 
-// GetTeacherCourses - Get courses for a specific teacher (admin route)
-func GetTeacherCourses(c *gin.Context) {
+// GetTeacherCourse - Get course for a specific teacher (admin route)
+func GetTeacherCourse(c *gin.Context) {
 	teacherID, _ := strconv.Atoi(c.Param("teacher_id"))
 
 	var teacher models.Teacher
-	if err := database.DB.Preload("Courses.Chapters").First(&teacher, teacherID).Error; err != nil {
+	if err := database.DB.Preload("Course.Chapters").First(&teacher, teacherID).Error; err != nil {
 		helpers.Respond(c, false, nil, "Teacher not found")
 		return
 	}
 
-	helpers.Respond(c, true, teacher.Courses, "Teacher courses retrieved successfully")
+	if teacher.Course == nil {
+		helpers.Respond(c, false, nil, "No course assigned to this teacher")
+		return
+	}
+
+	helpers.Respond(c, true, teacher.Course, "Teacher course retrieved successfully")
 }
 
-// GetMyCourses - Get courses for the authenticated user
-// Teachers see their own courses, students see their teacher's courses
-func GetMyCourses(c *gin.Context) {
+// GetMyCourse - Get course for the authenticated user
+// Teachers see their own course, students see their teacher's course
+func GetMyCourse(c *gin.Context) {
 	teacherID, exists := c.Get("teacher_id")
 	if !exists {
 		helpers.Respond(c, false, nil, "No teacher associated with your account")
@@ -283,10 +278,15 @@ func GetMyCourses(c *gin.Context) {
 	}
 
 	var teacher models.Teacher
-	if err := database.DB.Preload("Courses.Chapters").First(&teacher, teacherID).Error; err != nil {
+	if err := database.DB.Preload("Course.Chapters").First(&teacher, teacherID).Error; err != nil {
 		helpers.Respond(c, false, nil, "Teacher not found")
 		return
 	}
 
-	helpers.Respond(c, true, teacher.Courses, "Courses retrieved successfully")
+	if teacher.Course == nil {
+		helpers.Respond(c, false, nil, "No course assigned")
+		return
+	}
+
+	helpers.Respond(c, true, teacher.Course, "Course retrieved successfully")
 }

@@ -13,12 +13,12 @@ func CourseRoutes(router gin.IRouter) {
 		courses.GET("", controllers.GetCourses)
 		courses.GET("/:id", controllers.GetCourse)
 
-		// Get my courses (teacher sees their courses, student sees teacher's courses)
+		// Get my course (teacher sees their course, student sees teacher's course)
 		authRoutes := courses.Group("")
 		authRoutes.Use(middleware.AuthMiddleware())
 		authRoutes.Use(middleware.RoleMiddleware("teacher", "student", "admin", "super_admin"))
 		{
-			authRoutes.GET("/my", controllers.GetMyCourses)
+			authRoutes.GET("/my", controllers.GetMyCourse)
 		}
 
 		// Admin only routes
@@ -26,7 +26,7 @@ func CourseRoutes(router gin.IRouter) {
 		adminOnly.Use(middleware.AuthMiddleware())
 		adminOnly.Use(middleware.RoleMiddleware("admin", "super_admin"))
 		{
-			adminOnly.GET("/teacher/:teacher_id", controllers.GetTeacherCourses)
+			adminOnly.GET("/teacher/:teacher_id", controllers.GetTeacherCourse)
 			adminOnly.POST("", controllers.CreateCourse)
 			adminOnly.PUT("/:id", controllers.UpdateCourse)
 			adminOnly.DELETE("/:id", controllers.DeleteCourse)

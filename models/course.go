@@ -13,7 +13,7 @@ type Course struct {
 	ImageURL    string    `gorm:"type:varchar(500)" json:"image_url"`
 
 	Chapters []Chapter `gorm:"foreignKey:CourseID" json:"chapters,omitempty"`
-	Teachers []Teacher `gorm:"many2many:teacher_courses" json:"teachers,omitempty"`
+	Teachers []Teacher `gorm:"foreignKey:CourseID" json:"teachers,omitempty"`
 }
 
 func (Course) TableName() string {

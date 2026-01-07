@@ -77,7 +77,6 @@ func AutoMigrate() error {
 		&models.Lesson{},
 		&models.LessonFile{},
 		&models.LessonVideo{},
-		&models.TeacherCourse{},
 	)
 
 	if err != nil {

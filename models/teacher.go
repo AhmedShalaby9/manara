@@ -7,6 +7,7 @@ import (
 type Teacher struct {
 	ID              uint      `gorm:"primaryKey;autoIncrement" json:"id"`
 	UserID          uint      `gorm:"unique;not null" json:"user_id"`
+	CourseID        *uint     `gorm:"index" json:"course_id"`
 	Bio             string    `gorm:"type:text" json:"bio"`
 	Specialization  string    `gorm:"type:varchar(255)" json:"specialization"`
 	ExperienceYears int       `gorm:"default:0" json:"experience_years"`
@@ -15,7 +16,7 @@ type Teacher struct {
 
 	User     *User     `gorm:"foreignKey:UserID;references:ID" json:"user,omitempty"`
 	Students []Student `gorm:"foreignKey:TeacherID" json:"students,omitempty"`
-	Courses  []Course  `gorm:"many2many:teacher_courses" json:"courses,omitempty"`
+	Course   *Course   `gorm:"foreignKey:CourseID;references:ID" json:"course,omitempty"`
 	Chapters []Chapter `gorm:"foreignKey:TeacherID" json:"chapters,omitempty"`
 	Lessons  []Lesson  `gorm:"foreignKey:TeacherID" json:"lessons,omitempty"`
 }
