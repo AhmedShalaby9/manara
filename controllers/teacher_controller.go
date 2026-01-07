@@ -14,7 +14,7 @@ func GetTeachers(c *gin.Context) {
 	var teachers []models.Teacher
 
 	params := helpers.GetPaginationParams(c)
-	query := database.DB.Model(&models.Teacher{}).Preload("User").Preload("Courses")
+	query := database.DB.Model(&models.Teacher{}).Preload("User")
 
 	pagination, res := helpers.Paginate(query, params, &teachers)
 	if res != nil {
@@ -30,7 +30,7 @@ func GetTeacher(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var teacher models.Teacher
 
-	res := database.DB.Preload("User.Role").Preload("Courses").Preload("Chapters").Preload("Students.User").First(&teacher, id)
+	res := database.DB.Preload("User.Role").Preload("Chapters").Preload("Students.User").First(&teacher, id)
 	if res.Error != nil {
 		helpers.Respond(c, false, nil, "Teacher not found")
 		return
