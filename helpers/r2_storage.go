@@ -126,7 +126,7 @@ func UploadImageToR2(file *multipart.FileHeader, folder string) (string, error) 
 		".gif":  true,
 		".webp": true,
 	}
-	return UploadToR2(file, folder, allowedExts, 5) // 5MB max for images
+	return UploadToR2(file, folder, allowedExts, 20) // 5MB max for images
 }
 
 // UploadFileToR2 uploads a document/file to R2 with document-specific validation
@@ -146,7 +146,7 @@ func UploadFileToR2(file *multipart.FileHeader, folder string) (string, error) {
 		".gif":  true,
 		".webp": true,
 	}
-	return UploadToR2(file, folder, allowedExts, 50) // 50MB max for documents
+	return UploadToR2(file, folder, allowedExts, 200) // 50MB max for documents
 }
 
 // UploadVideoToR2 uploads a video to R2 with video-specific validation
@@ -159,7 +159,7 @@ func UploadVideoToR2(file *multipart.FileHeader, folder string) (string, error) 
 		".webm": true,
 		".m4v":  true,
 	}
-	return UploadToR2(file, folder, allowedExts, 500) // 500MB max for videos
+	return UploadToR2(file, folder, allowedExts, 3000) // 500MB max for videos
 }
 
 // DeleteFromR2 deletes a file from R2 using its URL
