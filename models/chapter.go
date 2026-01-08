@@ -6,7 +6,7 @@ import (
 
 type Chapter struct {
 	ID          uint      `gorm:"primaryKey;autoIncrement" json:"id"`
-	CourseID    uint      `gorm:"not null" json:"course_id"`
+	CourseID    uint      `gorm:"not null;constraint:OnDelete:CASCADE" json:"course_id"`
 	TeacherID   uint      `gorm:"not null" json:"teacher_id"`
 	Name        string    `gorm:"type:varchar(100);not null" json:"name"`
 	Order       int       `gorm:"not null;default:1" json:"order"`

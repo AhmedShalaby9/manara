@@ -6,7 +6,7 @@ import (
 
 type Lesson struct {
 	ID          uint      `gorm:"primaryKey;autoIncrement" json:"id"`
-	ChapterID   uint      `gorm:"not null" json:"chapter_id"`
+	ChapterID   uint      `gorm:"not null;constraint:OnDelete:CASCADE" json:"chapter_id"`
 	TeacherID   uint      `gorm:"not null" json:"teacher_id"`
 	Name        string    `gorm:"type:varchar(200);not null" json:"name"`
 	Description string    `gorm:"type:text" json:"description"`
@@ -22,7 +22,7 @@ type Lesson struct {
 
 type LessonFile struct {
 	ID        uint      `gorm:"primaryKey;autoIncrement" json:"id"`
-	LessonID  uint      `gorm:"not null;index" json:"lesson_id"`
+	LessonID  uint      `gorm:"not null;index;constraint:OnDelete:CASCADE" json:"lesson_id"`
 	FileURL   string    `gorm:"type:varchar(500);not null" json:"file_url"`
 	FileName  string    `gorm:"type:varchar(255);not null" json:"file_name"`
 	FileType  string    `gorm:"type:varchar(50)" json:"file_type"`
@@ -40,7 +40,7 @@ func (LessonFile) TableName() string {
 
 type LessonVideo struct {
 	ID        uint      `gorm:"primaryKey;autoIncrement" json:"id"`
-	LessonID  uint      `gorm:"not null;index" json:"lesson_id"`
+	LessonID  uint      `gorm:"not null;index;constraint:OnDelete:CASCADE" json:"lesson_id"`
 	VideoURL  string    `gorm:"type:varchar(500);not null" json:"video_url"`
 	VideoName string    `gorm:"type:varchar(255);not null" json:"video_name"`
 	FileSize  int64     `gorm:"not null" json:"file_size"`
