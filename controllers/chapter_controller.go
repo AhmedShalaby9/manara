@@ -21,7 +21,7 @@ func GetChapters(c *gin.Context) {
 	var chapters []models.Chapter
 
 	params := helpers.GetPaginationParams(c)
-	query := database.DB.Model(&models.Chapter{}).Preload("Course").Preload("Teacher.User").Preload("AcademicYear")
+	query := database.DB.Model(&models.Chapter{}).Preload("Course").Preload("AcademicYear")
 
 	// Role-based teacher scoping
 	if teacherID := helpers.GetEffectiveTeacherID(c); teacherID != nil {
