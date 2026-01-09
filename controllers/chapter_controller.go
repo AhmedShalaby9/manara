@@ -15,6 +15,8 @@ import (
 // For admins: can filter by teacher_id query param or see all
 func GetChapters(c *gin.Context) {
 	courseID := c.Query("course_id")
+	academicYearID := c.Query("academic_year_id")
+
 	search := c.Query("search")
 	var chapters []models.Chapter
 
@@ -36,6 +38,10 @@ func GetChapters(c *gin.Context) {
 
 	if courseID != "" {
 		query = query.Where("course_id = ?", courseID)
+	}
+
+	if academicYearID != "" {
+		query = query.Where("academic_year_id = ?", academicYearID)
 	}
 	if search != "" {
 		query = query.Where("name LIKE ?", "%"+search+"%")
@@ -115,19 +121,6 @@ func CreateChapter(c *gin.Context) {
 		return
 	}
 
-	// Validate academic_year_id is required
-	if req.AcademicYearID == 0 {
-		helpers.Respond(c, false, nil, "Academic year ID is required")
-		return
-	}
-
-	// Verify academic year exists
-	var academicYear models.AcademicYear
-	if err := database.DB.First(&academicYear, req.AcademicYearID).Error; err != nil {
-		helpers.Respond(c, false, nil, "Academic year not found")
-		return
-	}
-
 	// Set default order if not provided
 	if req.Order == 0 {
 		var maxOrder int
@@ -136,12 +129,11 @@ func CreateChapter(c *gin.Context) {
 	}
 
 	chapter := models.Chapter{
-		CourseID:       courseID,
-		TeacherID:      teacherID,
-		AcademicYearID: req.AcademicYearID,
-		Name:           req.Name,
-		Order:          req.Order,
-		Description:    req.Description,
+		CourseID:    courseID,
+		TeacherID:   teacherID,
+		Name:        req.Name,
+		Order:       req.Order,
+		Description: req.Description,
 	}
 
 	if err := database.DB.Create(&chapter).Error; err != nil {
@@ -149,7 +141,7 @@ func CreateChapter(c *gin.Context) {
 		return
 	}
 
-	database.DB.Preload("Course").Preload("Teacher.User").Preload("AcademicYear").First(&chapter, chapter.ID)
+	database.DB.Preload("Course").Preload("Teacher.User").First(&chapter, chapter.ID)
 
 	helpers.Respond(c, true, chapter, "Chapter created successfully")
 }
@@ -185,7 +177,7 @@ func UpdateChapter(c *gin.Context) {
 		return
 	}
 
-	database.DB.Preload("Course").Preload("Teacher.User").Preload("AcademicYear").First(&chapter, chapter.ID)
+	database.DB.Preload("Course").Preload("Teacher.User").First(&chapter, chapter.ID)
 
 	helpers.Respond(c, true, chapter, "Chapter updated successfully")
 }
