@@ -101,8 +101,8 @@ func RegisterStudent(c *gin.Context) {
 	// Load user with role
 	database.DB.Preload("Role").First(&user, user.ID)
 
-	// Generate token
-	token, err := helpers.GenerateToken(user.ID, user.UserName, user.RoleID, "student", nil)
+	// Generate token with student info
+	token, err := helpers.GenerateToken(user.ID, user.UserName, user.RoleID, "student", &teacher.ID, &student.ID, &student.AcademicYearID)
 	if err != nil {
 		helpers.Respond(c, false, nil, "Failed to generate token")
 		return
@@ -154,23 +154,27 @@ func Login(c *gin.Context) {
 		roleValue = user.Role.RoleValue
 	}
 
-	// Get teacher_id based on role
+	// Get teacher_id, student_id, and academic_year_id based on role
 	var teacherID *uint
+	var studentID *uint
+	var academicYearID *uint
 	if roleValue == "teacher" {
 		var teacher models.Teacher
 		if err := database.DB.Where("user_id = ?", user.ID).First(&teacher).Error; err == nil {
 			teacherID = &teacher.ID
 		}
 	} else if roleValue == "student" {
-		// For students, get their linked teacher's ID
+		// For students, get their linked teacher's ID and academic year
 		var student models.Student
 		if err := database.DB.Where("user_id = ?", user.ID).First(&student).Error; err == nil {
 			teacherID = &student.TeacherID
+			studentID = &student.ID
+			academicYearID = &student.AcademicYearID
 		}
 	}
 
-	// Generate token with role_value and teacher_id
-	token, err := helpers.GenerateToken(user.ID, user.UserName, user.RoleID, roleValue, teacherID)
+	// Generate token with role_value, teacher_id, student_id, and academic_year_id
+	token, err := helpers.GenerateToken(user.ID, user.UserName, user.RoleID, roleValue, teacherID, studentID, academicYearID)
 	if err != nil {
 		helpers.Respond(c, false, nil, "Failed to generate token")
 		return

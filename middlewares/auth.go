@@ -45,6 +45,12 @@ func AuthMiddleware() gin.HandlerFunc {
 		if claims.TeacherID != nil {
 			c.Set("teacher_id", *claims.TeacherID)
 		}
+		if claims.StudentID != nil {
+			c.Set("student_id", *claims.StudentID)
+		}
+		if claims.AcademicYearID != nil {
+			c.Set("academic_year_id", *claims.AcademicYearID)
+		}
 
 		c.Next()
 	}

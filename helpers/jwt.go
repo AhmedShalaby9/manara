@@ -9,17 +9,19 @@ import (
 )
 
 type Claims struct {
-	UserID    uint   `json:"user_id"`
-	UserName  string `json:"user_name"`
-	RoleID    uint   `json:"role_id"`
-	RoleValue string `json:"role_value"`
-	TeacherID *uint  `json:"teacher_id,omitempty"` // nil if not a teacher
+	UserID         uint   `json:"user_id"`
+	UserName       string `json:"user_name"`
+	RoleID         uint   `json:"role_id"`
+	RoleValue      string `json:"role_value"`
+	TeacherID      *uint  `json:"teacher_id,omitempty"`       // nil if not a teacher
+	StudentID      *uint  `json:"student_id,omitempty"`       // nil if not a student
+	AcademicYearID *uint  `json:"academic_year_id,omitempty"` // nil if not a student
 
 	jwt.RegisteredClaims
 }
 
 // GenerateToken creates a new JWT token for a user
-func GenerateToken(userID uint, userName string, roleID uint, roleValue string, teacherID *uint) (string, error) {
+func GenerateToken(userID uint, userName string, roleID uint, roleValue string, teacherID *uint, studentID *uint, academicYearID *uint) (string, error) {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
 		return "", errors.New("JWT_SECRET not set")
@@ -28,11 +30,13 @@ func GenerateToken(userID uint, userName string, roleID uint, roleValue string, 
 	expirationTime := time.Now().Add(24 * time.Hour) // 24 hours
 
 	claims := &Claims{
-		UserID:    userID,
-		UserName:  userName,
-		RoleID:    roleID,
-		RoleValue: roleValue,
-		TeacherID: teacherID,
+		UserID:         userID,
+		UserName:       userName,
+		RoleID:         roleID,
+		RoleValue:      roleValue,
+		TeacherID:      teacherID,
+		StudentID:      studentID,
+		AcademicYearID: academicYearID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

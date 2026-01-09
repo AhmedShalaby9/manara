@@ -11,6 +11,7 @@ import (
 
 // GetChapters - Get all chapters (optionally filter by course, teacher, or search by name)
 // For teachers: automatically filtered to their own chapters
+// For students: filtered to their teacher's chapters AND their academic year
 // For admins: can filter by teacher_id query param or see all
 func GetChapters(c *gin.Context) {
 	courseID := c.Query("course_id")
@@ -18,11 +19,19 @@ func GetChapters(c *gin.Context) {
 	var chapters []models.Chapter
 
 	params := helpers.GetPaginationParams(c)
-	query := database.DB.Model(&models.Chapter{}).Preload("Course").Preload("Teacher.User")
+	query := database.DB.Model(&models.Chapter{}).Preload("Course").Preload("Teacher.User").Preload("AcademicYear")
 
 	// Role-based teacher scoping
 	if teacherID := helpers.GetEffectiveTeacherID(c); teacherID != nil {
 		query = query.Where("teacher_id = ?", *teacherID)
+	}
+
+	// For students: filter by their academic year
+	roleValue, _ := c.Get("role_value")
+	if roleValue == "student" {
+		if academicYearID, exists := c.Get("academic_year_id"); exists {
+			query = query.Where("academic_year_id = ?", academicYearID)
+		}
 	}
 
 	if courseID != "" {
@@ -47,7 +56,7 @@ func GetChapter(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var chapter models.Chapter
 
-	res := database.DB.Preload("Course").Preload("Teacher.User").Preload("Lessons.Teacher.User").First(&chapter, id)
+	res := database.DB.Preload("Course").Preload("Teacher.User").Preload("AcademicYear").Preload("Lessons.Teacher.User").First(&chapter, id)
 	if res.Error != nil {
 		helpers.Respond(c, false, nil, "Chapter not found")
 		return
@@ -106,6 +115,19 @@ func CreateChapter(c *gin.Context) {
 		return
 	}
 
+	// Validate academic_year_id is required
+	if req.AcademicYearID == 0 {
+		helpers.Respond(c, false, nil, "Academic year ID is required")
+		return
+	}
+
+	// Verify academic year exists
+	var academicYear models.AcademicYear
+	if err := database.DB.First(&academicYear, req.AcademicYearID).Error; err != nil {
+		helpers.Respond(c, false, nil, "Academic year not found")
+		return
+	}
+
 	// Set default order if not provided
 	if req.Order == 0 {
 		var maxOrder int
@@ -114,11 +136,12 @@ func CreateChapter(c *gin.Context) {
 	}
 
 	chapter := models.Chapter{
-		CourseID:    courseID,
-		TeacherID:   teacherID,
-		Name:        req.Name,
-		Order:       req.Order,
-		Description: req.Description,
+		CourseID:       courseID,
+		TeacherID:      teacherID,
+		AcademicYearID: req.AcademicYearID,
+		Name:           req.Name,
+		Order:          req.Order,
+		Description:    req.Description,
 	}
 
 	if err := database.DB.Create(&chapter).Error; err != nil {
@@ -126,7 +149,7 @@ func CreateChapter(c *gin.Context) {
 		return
 	}
 
-	database.DB.Preload("Course").Preload("Teacher.User").First(&chapter, chapter.ID)
+	database.DB.Preload("Course").Preload("Teacher.User").Preload("AcademicYear").First(&chapter, chapter.ID)
 
 	helpers.Respond(c, true, chapter, "Chapter created successfully")
 }
@@ -162,7 +185,7 @@ func UpdateChapter(c *gin.Context) {
 		return
 	}
 
-	database.DB.Preload("Course").Preload("Teacher.User").First(&chapter, chapter.ID)
+	database.DB.Preload("Course").Preload("Teacher.User").Preload("AcademicYear").First(&chapter, chapter.ID)
 
 	helpers.Respond(c, true, chapter, "Chapter updated successfully")
 }

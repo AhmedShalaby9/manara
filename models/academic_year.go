@@ -10,6 +10,8 @@ type AcademicYear struct {
 	IsActive  bool      `gorm:"type:boolean;not null;default:true" json:"is_active"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+
+	Chapters []Chapter `gorm:"foreignKey:AcademicYearID" json:"chapters,omitempty"`
 }
 
 func (AcademicYear) TableName() string {
