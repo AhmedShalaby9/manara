@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetLessons - Get all lessons (filter by chapter, teacher, or search by name)
+// GetLessons - Get all lessons (filter by chapter, teacher, academic_year, or search by name)
 // For teachers: automatically filtered to their own lessons
 // For admins: can filter by teacher_id query param or see all
 func GetLessons(c *gin.Context) {
@@ -31,9 +31,12 @@ func GetLessons(c *gin.Context) {
 		query = query.Where("chapter_id = ?", chapterID)
 	}
 
+	// Filter by academic year through chapters
 	if academicYearID != "" {
-		query = query.Where("academic_year_id = ?", academicYearID)
+		query = query.Joins("JOIN chapters ON chapters.id = lessons.chapter_id").
+			Where("chapters.academic_year_id = ?", academicYearID)
 	}
+
 	if search != "" {
 		query = query.Where("name LIKE ?", "%"+search+"%")
 	}
