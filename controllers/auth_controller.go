@@ -180,6 +180,9 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// Set academic_year_id on user for response (only for students)
+	user.AcademicYearID = academicYearID
+
 	response := models.AuthResponse{
 		Token: token,
 		User:  user,
@@ -201,6 +204,12 @@ func GetMe(c *gin.Context) {
 	if err := database.DB.Preload("Role").First(&user, userID).Error; err != nil {
 		helpers.Respond(c, false, nil, "User not found")
 		return
+	}
+
+	// Set academic_year_id from context (only available for students)
+	if academicYearID, exists := c.Get("academic_year_id"); exists {
+		aid := academicYearID.(uint)
+		user.AcademicYearID = &aid
 	}
 
 	helpers.Respond(c, true, user, "User retrieved successfully")

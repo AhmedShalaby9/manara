@@ -28,7 +28,7 @@ func (Chapter) TableName() string {
 type CreateChapterRequest struct {
 	CourseID       uint   `json:"course_id"`        // Optional for teachers (auto-filled from teacher record), required for admins
 	TeacherID      uint   `json:"teacher_id"`       // Optional for teachers (auto-filled from token), required for admins
-	AcademicYearID uint   `json:"academic_year_id"` // Required - the academic year this chapter belongs to
+	AcademicYearID uint   `json:"academic_year_id" binding:"required"`
 	Name           string `json:"name" binding:"required"`
 	Order          int    `json:"order"`
 	Description    string `json:"description"`

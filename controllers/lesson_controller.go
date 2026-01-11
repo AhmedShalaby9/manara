@@ -14,6 +14,8 @@ import (
 // For admins: can filter by teacher_id query param or see all
 func GetLessons(c *gin.Context) {
 	chapterID := c.Query("chapter_id")
+	academicYearID := c.Query("academic_year_id")
+
 	search := c.Query("search")
 	var lessons []models.Lesson
 
@@ -27,6 +29,10 @@ func GetLessons(c *gin.Context) {
 
 	if chapterID != "" {
 		query = query.Where("chapter_id = ?", chapterID)
+	}
+
+	if academicYearID != "" {
+		query = query.Where("academic_year_id = ?", academicYearID)
 	}
 	if search != "" {
 		query = query.Where("name LIKE ?", "%"+search+"%")

@@ -14,9 +14,10 @@ type User struct {
 	UserName     string    `gorm:"type:varchar(100);unique;not null" json:"user_name"`
 	PasswordHash string    `gorm:"type:varchar(255);not null" json:"-"`
 	IsActive     bool      `gorm:"default:true" json:"is_active"`
-	TeacherID    *uint     `gorm:"default:null" json:"teacher_id,omitempty"`
-	StudentID    *uint     `gorm:"default:null" json:"student_id,omitempty"`
-	CreatedAt    time.Time `json:"created_at"`
+	TeacherID      *uint     `gorm:"default:null" json:"teacher_id,omitempty"`
+	StudentID      *uint     `gorm:"default:null" json:"student_id,omitempty"`
+	AcademicYearID *uint     `gorm:"-" json:"academic_year_id"`
+	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 
 	Role    *Role    `gorm:"foreignKey:RoleID;references:ID" json:"role,omitempty"`

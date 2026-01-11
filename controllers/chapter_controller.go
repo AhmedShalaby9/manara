@@ -129,11 +129,12 @@ func CreateChapter(c *gin.Context) {
 	}
 
 	chapter := models.Chapter{
-		CourseID:    courseID,
-		TeacherID:   teacherID,
-		Name:        req.Name,
-		Order:       req.Order,
-		Description: req.Description,
+		CourseID:       courseID,
+		TeacherID:      teacherID,
+		AcademicYearID: req.AcademicYearID,
+		Name:           req.Name,
+		Order:          req.Order,
+		Description:    req.Description,
 	}
 
 	if err := database.DB.Create(&chapter).Error; err != nil {
