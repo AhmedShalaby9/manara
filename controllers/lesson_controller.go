@@ -24,11 +24,11 @@ func GetLessons(c *gin.Context) {
 
 	// Role-based teacher scoping
 	if teacherID := helpers.GetEffectiveTeacherID(c); teacherID != nil {
-		query = query.Where("teacher_id = ?", *teacherID)
+		query = query.Where("lessons.teacher_id = ?", *teacherID)
 	}
 
 	if chapterID != "" {
-		query = query.Where("chapter_id = ?", chapterID)
+		query = query.Where("lessons.chapter_id = ?", chapterID)
 	}
 
 	// Filter by academic year through chapters
@@ -38,10 +38,10 @@ func GetLessons(c *gin.Context) {
 	}
 
 	if search != "" {
-		query = query.Where("name LIKE ?", "%"+search+"%")
+		query = query.Where("lessons.name LIKE ?", "%"+search+"%")
 	}
 
-	query = query.Order("`order` ASC")
+	query = query.Order("lessons.`order` ASC")
 	pagination, err := helpers.Paginate(query, params, &lessons)
 	if err != nil {
 		helpers.Respond(c, false, nil, "Failed to retrieve lessons")
