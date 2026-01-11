@@ -61,6 +61,9 @@ func main() {
 
 	router := gin.Default()
 
+	// Set max multipart memory to 3GB for large video uploads
+	router.MaxMultipartMemory = 3 << 30 // 3GB
+
 	// Serve static files (uploaded images)
 	router.Static("/uploads", "./uploads")
 
