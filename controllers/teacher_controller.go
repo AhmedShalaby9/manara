@@ -74,7 +74,7 @@ func CreateTeacher(c *gin.Context) {
 		UserName:     req.UserName,
 		PasswordHash: hashedPassword,
 		RoleID:       3,
-		IsActive:     true,
+		IsActive:     false,
 	}
 
 	if err := tx.Create(&user).Error; err != nil {

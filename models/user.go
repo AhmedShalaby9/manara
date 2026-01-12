@@ -13,7 +13,7 @@ type User struct {
 	Phone        string    `gorm:"type:varchar(20)" json:"phone"`
 	UserName     string    `gorm:"type:varchar(100);unique;not null" json:"user_name"`
 	PasswordHash string    `gorm:"type:varchar(255);not null" json:"-"`
-	IsActive     bool      `gorm:"default:true" json:"is_active"`
+	IsActive     bool      `gorm:"default:false" json:"is_active"`
 	TeacherID      *uint     `gorm:"default:null" json:"teacher_id,omitempty"`
 	StudentID      *uint     `gorm:"default:null" json:"student_id,omitempty"`
 	AcademicYearID *uint     `gorm:"-" json:"academic_year_id"`
