@@ -35,6 +35,13 @@ func RegisterStudent(c *gin.Context) {
 		return
 	}
 
+	// Validate academic year exists
+	var academicYear models.AcademicYear
+	if err := database.DB.First(&academicYear, req.AcademicYearID).Error; err != nil {
+		helpers.Respond(c, false, nil, "Academic year not found")
+		return
+	}
+
 	// Check if username already exists
 	var existingUser models.User
 	if err := database.DB.Where("user_name = ?", req.UserName).First(&existingUser).Error; err == nil {
@@ -85,9 +92,10 @@ func RegisterStudent(c *gin.Context) {
 
 	// Create student record linked to teacher
 	student := models.Student{
-		UserID:      user.ID,
-		TeacherID:   teacher.ID,
-		ParentPhone: req.ParentPhone,
+		UserID:         user.ID,
+		TeacherID:      teacher.ID,
+		ParentPhone:    req.ParentPhone,
+		AcademicYearID: req.AcademicYearID,
 	}
 
 	if err := tx.Create(&student).Error; err != nil {

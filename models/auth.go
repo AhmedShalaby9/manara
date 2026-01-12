@@ -15,6 +15,7 @@ type RegisterStudentRequest struct {
 	Password        string `json:"password" binding:"required,min=6"`
 	TeacherUserName string `json:"teacher_user_name" binding:"required"` // Teacher's username to link student
 	ParentPhone     string `json:"parent_phone"`
+	AcademicYearID  uint   `json:"academic_year_id" binding:"required"`
 }
 
 // CreateUserRequest - For admin to create any user
