@@ -15,5 +15,6 @@ func StudentRoutes(router gin.IRouter) {
 		students.GET("", controllers.GetStudents)
 		students.GET("/:id", controllers.GetStudent)
 		students.POST("", controllers.CreateStudent)
+		students.PUT("/:id/toggle-activation", controllers.ToggleStudentActivation)
 	}
 }

@@ -146,3 +146,42 @@ func CreateStudent(c *gin.Context) {
 
 	helpers.Respond(c, true, student, "Student created successfully")
 }
+
+// ToggleStudentActivation - Toggle student's active status
+// Teachers can only toggle their own students
+// Admins can toggle any student
+func ToggleStudentActivation(c *gin.Context) {
+	studentID, _ := strconv.Atoi(c.Param("id"))
+	activeParam := c.PostForm("active")
+
+	isActive, err := strconv.ParseBool(activeParam)
+	if err != nil {
+		helpers.Respond(c, false, nil, "Invalid active value")
+		return
+	}
+
+	var student models.Student
+	if err := database.DB.Preload("User").First(&student, studentID).Error; err != nil {
+		helpers.Respond(c, false, nil, "Student not found")
+		return
+	}
+
+	// Teacher scoping - verify student belongs to this teacher
+	if teacherID := helpers.GetEffectiveTeacherID(c); teacherID != nil {
+		if student.TeacherID != *teacherID {
+			helpers.RespondForbiden(c, "You can only manage your own students")
+			return
+		}
+	}
+
+	// Update the user's is_active status
+	if err := database.DB.Model(&student.User).Update("is_active", isActive).Error; err != nil {
+		helpers.Respond(c, false, nil, "Failed to update student activation status")
+		return
+	}
+
+	// Reload student with updated user info
+	database.DB.Preload("User.Role").Preload("AcademicYear").First(&student, student.ID)
+
+	helpers.Respond(c, true, student, "Student activation status updated successfully")
+}
